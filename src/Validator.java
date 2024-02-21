@@ -37,4 +37,36 @@ public class Validator {
             }else return null;    
         }else return null;
     }
+
+    /**
+     * @description Método que se encarga de llenar la pila con las expresiones validadas
+     * @return Token
+     */
+    public Token fillStack(){
+        ArrayList<Token> tokens = new ArrayList<Token>();
+        Stack<Character> instructions = new Stack<Character>();
+        Token token = new Token();
+        String expressionValidated = "";
+        for (int i = 0; i < code.length(); i++) {
+            instructions.add(code.charAt(i));
+        }
+        while (!instructions.empty()) {
+            token.setValue(String.valueOf(instructions.pop()));
+            tokens.add(token);
+            if(token.getValue().equals(")")){
+                token.setValue(String.valueOf(instructions.pop()));
+                tokens.add(token);
+            }else if (token.getValue().contains("(")){
+                if(validateExpression(tokens)!=null){
+                    for (int i=tokens.size(); i<0; i--) {
+                        expressionValidated.concat(tokens.get(i).getValue()+" ");
+                    }
+                    token.setValue(expressionValidated);
+                    atoms.add(token);
+                }
+                tokens.clear();
+            }
+        }
+        return token;
+    }
 }
