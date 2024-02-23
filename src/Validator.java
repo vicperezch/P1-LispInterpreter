@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Stack;
 
 /**
- * @author Diego Flores
+ * @author Diego Flores & Victor Pérez
  * @date 19/02/2024
  * @description Clase que se encarga de hacer las validaciones
  * @version 1.0
@@ -16,26 +16,29 @@ public class Validator {
     private String code;
     private Reader reader;
 
-    public Validator(){
-
+    public Validator() {
+        this.atoms = new Stack<>();
+        this.counter = 0;
+        this.reader = new Reader();
+        this.code = reader.readFile();
     }
 
     /**
-     * @description Metodo que se encarga de validar las expresiones
+     * @description Método que se encarga de validar las expresiones
      * @param expression
      * @return ArrayList<Token>
      */
-    public ArrayList<Token> validateExpression(ArrayList<Token> expression){
-        String operations = "+-*/";
-        String numbers = "0123456789";
-        if(expression.get(0).getValue().equals("(") && expression.get(expression.size()-1).getValue().equals(")")){
-            if(operations.contains(expression.get(1).getValue())){
-                if(numbers.contains(expression.get(2).getValue())){
-                    if(numbers.contains(expression.get(3).getValue())) return expression;
-                    else return null; 
-                }else return null;
-            }else return null;    
-        }else return null;
+    public Token validateExpression(ArrayList<Token> expression){
+
+        if (expression.size() >= 3) {
+            if (expression.get(0).getTypeValue().equals("OPERATOR")) {
+                if (expression.get(1).getTypeValue().equals("INTEGER") && expression.get(2).getTypeValue().equals("INTEGER")) {
+                    return new Token("(" + expression.get(0).getValue() + expression.get(1).getValue() + expression.get(2).getValue() + ")", "INTEGER");
+                }
+            }
+        }
+
+        throw new RuntimeException("Expresión no válida");
     }
 
     /**
@@ -43,30 +46,30 @@ public class Validator {
      * @return Token
      */
     public Token fillStack(){
-        ArrayList<Token> tokens = new ArrayList<Token>();
-        Stack<Character> instructions = new Stack<Character>();
-        Token token = new Token();
-        String expressionValidated = "";
         for (int i = 0; i < code.length(); i++) {
-            instructions.add(code.charAt(i));
-        }
-        while (!instructions.empty()) {
-            token.setValue(String.valueOf(instructions.pop()));
-            tokens.add(token);
-            if(token.getValue().equals(")")){
-                token.setValue(String.valueOf(instructions.pop()));
-                tokens.add(token);
-            }else if (token.getValue().contains("(")){
-                if(validateExpression(tokens)!=null){
-                    for (int i=tokens.size(); i<0; i--) {
-                        expressionValidated.concat(tokens.get(i).getValue()+" ");
-                    }
-                    token.setValue(expressionValidated);
-                    atoms.add(token);
+            if (code.charAt(i) == ')') {
+                ArrayList<Token> expression = new ArrayList<Token>();
+                while (!atoms.peek().getTypeValue().equals("PARENTHESIS")) {
+                    expression.addFirst(atoms.pop());
                 }
-                tokens.clear();
+
+                atoms.pop();
+                Token result = validateExpression(expression);
+                atoms.push(result);
+
+            } else if (code.charAt(i) != ' ') {
+                if (Character.isDigit(code.charAt(i))) {
+                    atoms.push(new Token(String.valueOf(code.charAt(i)), "INTEGER"));
+
+                } else if (code.charAt(i) == '(') {
+                    atoms.push(new Token(String.valueOf(code.charAt(i)), "PARENTHESIS"));
+                
+                } else {
+                    atoms.push(new Token(String.valueOf(code.charAt(i)), "OPERATOR"));
+                }
             }
         }
-        return token;
+
+        return atoms.pop();
     }
 }

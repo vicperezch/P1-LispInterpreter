@@ -14,7 +14,9 @@ public class Token {
     /**
      * @Description Constructor de Token
      */
-    public Token() {
+    public Token(String value, String typeValue) {
+        this.value = value;
+        this.typeValue = typeValue;
 
     }
 
