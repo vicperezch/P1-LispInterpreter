@@ -29,11 +29,15 @@ public class Validator {
      * @return ArrayList<Token>
      */
     public Token validateExpression(ArrayList<Token> expression){
+        String validatedArithmeticExpression = "";
 
         if (expression.size() >= 3) {
             if (expression.get(0).getTypeValue().equals("OPERATOR")) {
                 if (expression.get(1).getTypeValue().equals("INTEGER") && expression.get(2).getTypeValue().equals("INTEGER")) {
-                    return new Token("(" + expression.get(0).getValue() + expression.get(1).getValue() + expression.get(2).getValue() + ")", "INTEGER");
+                    for (Token token : expression) {
+                        validatedArithmeticExpression =  validatedArithmeticExpression + token.getValue() + ",";
+                    }
+                    return new Token("(," + validatedArithmeticExpression + ")", "INTEGER");
                 }
             }
         }
@@ -50,7 +54,7 @@ public class Validator {
             if (code.charAt(i) == ')') {
                 ArrayList<Token> expression = new ArrayList<Token>();
                 while (!atoms.peek().getTypeValue().equals("PARENTHESIS")) {
-                    expression.addFirst(atoms.pop());
+                    expression.add(0, atoms.pop());
                 }
 
                 atoms.pop();
@@ -58,8 +62,19 @@ public class Validator {
                 atoms.push(result);
 
             } else if (code.charAt(i) != ' ') {
-                if (Character.isDigit(code.charAt(i))) {
+                if (Character.isDigit(code.charAt(i)) && !Character.isDigit(code.charAt(i+1))) {
                     atoms.push(new Token(String.valueOf(code.charAt(i)), "INTEGER"));
+
+                } else if (Character.isDigit(code.charAt(i)) && Character.isDigit(code.charAt(i+1))) {
+                    String multipleDigitCharacter = String.valueOf(code.charAt(i));
+
+                    while (Character.isDigit(code.charAt(i + 1))) {
+                        if (code.charAt(i + 1) != ' ') {
+                            multipleDigitCharacter = multipleDigitCharacter + String.valueOf(code.charAt(i + 1));
+                        }
+                        i++;
+                    }
+                    atoms.push(new Token(multipleDigitCharacter, "INTEGER"));
 
                 } else if (code.charAt(i) == '(') {
                     atoms.push(new Token(String.valueOf(code.charAt(i)), "PARENTHESIS"));
@@ -71,5 +86,19 @@ public class Validator {
         }
 
         return atoms.pop();
+    }
+
+    /**
+     * @description Método que valida si un string es un número
+     * @param str String a validar
+     * @return True o false en función de si es un número
+     */
+    public boolean isInteger(String str) {
+        try {
+            Integer.parseInt(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 }

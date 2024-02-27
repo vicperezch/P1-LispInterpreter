@@ -1,5 +1,6 @@
 package src;
 
+import java.util.ArrayList;
 import java.util.Stack;
 
 /**
@@ -24,15 +25,16 @@ public class Interpreter {
      * 
      */
     public int calculate() {
-        Token exp = validator.fillStack();
+        Token rawExpression = validator.fillStack();
         int result = 0;
         Stack<Token> stack = new Stack<>();
+        String[] expression = rawExpression.getValue().split(",");
 
-        for (int i = 0; i < exp.getValue().length(); i++) {
-            if (exp.getValue().charAt(i) == '(') {
+        for (int i = 0; i < expression.length; i++) {
+            if (expression[i].equals("(")) {
                 stack.push(new Token("(", "PARENTHESIS"));
 
-            } else if (exp.getValue().charAt(i) == ')') {
+            } else if (expression[i].equals(")")) {
                 int num2 = Integer.parseInt(stack.pop().getValue());
                 int num1 = Integer.parseInt(stack.pop().getValue());
                 String operator = stack.pop().getValue();
@@ -53,11 +55,11 @@ public class Interpreter {
                 stack.pop();
                 stack.push(new Token(String.valueOf(result), "INTEGER"));
 
-            } else if (Character.isDigit(exp.getValue().charAt(i))) {
-                stack.push(new Token(String.valueOf(exp.getValue().charAt(i)), "INTEGER"));
+            } else if (validator.isInteger(expression[i])) {
+                stack.push(new Token(String.valueOf(expression[i]), "INTEGER"));
 
             } else {
-                stack.push(new Token(String.valueOf(exp.getValue().charAt(i)), "OPERATOR"));
+                stack.push(new Token(String.valueOf(expression[i]), "OPERATOR"));
             }
         }
 
