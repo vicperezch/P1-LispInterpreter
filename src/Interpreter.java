@@ -10,6 +10,7 @@ import java.util.Stack;
  * @version 1.0
  */
 public class Interpreter {
+    // Borrar este parámetro
     private Validator validator;
 
     /**
@@ -20,10 +21,7 @@ public class Interpreter {
         this.validator = new Validator();
     }
 
-    /**
-     * @description Método que se encarga de realizar operaciones aritméticas
-     * 
-     */
+    // Borrar este
     public int calculate() {
         Token rawExpression = validator.fillStack();
         int result = 0;
@@ -64,5 +62,25 @@ public class Interpreter {
         }
 
         return result;
+    }
+
+    /**
+     * @description Método que se encarga de realizar operaciones aritméticas
+     * @param expression Expresión a evaluar en forma de tokens
+     * @return Resultado de la operación
+     */
+    public int calculateArithmetic(ArrayList<Token> expression) {
+        // Hacer un swtich para cada operador
+        return 0;
+    }
+
+    /**
+     * @description Método que se encarga de comparar dos valores
+     * @param expression Comparación a realizar
+     * @return Resultado en forma de boolean
+     */
+    public boolean compare(ArrayList<Token> expression) {
+        // Hacer un swtich para cada caso (>, <, >=, <=, equals)
+        return false;
     }
 }

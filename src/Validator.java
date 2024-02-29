@@ -6,28 +6,103 @@ import java.util.Stack;
 /**
  * @author Diego Flores & Victor Pérez
  * @date 19/02/2024
- * @description Clase que se encarga de hacer las validaciones
- * @version 1.0
+ * @description Clase que se encarga de hacer las validaciones del código
+ * @version 2.0
  */
 public class Validator {
-
-    private Stack<Token> atoms;
-    private int counter;
+    private Stack<Token> executionStack;
     private String code;
-    private Reader reader;
+    private Interpreter interpreter;
 
+    /**
+     * @description Constructor de clase
+     */
     public Validator() {
-        this.atoms = new Stack<>();
-        this.counter = 0;
-        this.reader = new Reader();
+        Reader reader = new Reader();
+        this.executionStack = new Stack<>();
         this.code = reader.readFile();
+        this.interpreter = new Interpreter();
     }
 
     /**
-     * @description Método que se encarga de validar las expresiones
-     * @param expression
-     * @return ArrayList<Token>
+     * @description Método que se encarga de llenar la pila y validar las expresiones
+     * @return Token con el resultado del código
      */
+
+    // Modificar este    
+    public Token fillStack(){
+        for (int i = 0; i < code.length(); i++) {
+            if (code.charAt(i) == ')') {
+                ArrayList<Token> expression = new ArrayList<Token>();
+                while (!executionStack.peek().getTypeValue().equals("PARENTHESIS")) {
+                    expression.add(0, executionStack.pop());
+                }
+
+                executionStack.pop();
+                Token result = validateExpression(expression);
+                executionStack.push(result);
+
+            } else if (code.charAt(i) != ' ') {
+                if (Character.isDigit(code.charAt(i)) && !Character.isDigit(code.charAt(i+1))) {
+                    executionStack.push(new Token(String.valueOf(code.charAt(i)), "INTEGER"));
+
+                } else if (Character.isDigit(code.charAt(i)) && Character.isDigit(code.charAt(i+1))) {
+                    String multipleDigitCharacter = String.valueOf(code.charAt(i));
+
+                    while (Character.isDigit(code.charAt(i + 1))) {
+                        if (code.charAt(i + 1) != ' ') {
+                            multipleDigitCharacter = multipleDigitCharacter + String.valueOf(code.charAt(i + 1));
+                        }
+                        i++;
+                    }
+                    executionStack.push(new Token(multipleDigitCharacter, "INTEGER"));
+
+                } else if (code.charAt(i) == '(') {
+                    executionStack.push(new Token(String.valueOf(code.charAt(i)), "PARENTHESIS"));
+                
+                } else {
+                    executionStack.push(new Token(String.valueOf(code.charAt(i)), "OPERATOR"));
+                }
+            }
+        }
+
+        return executionStack.pop();
+    }
+
+    /**
+     * Convierte una expresión en una lista de tokens según su tipo
+     * @param expression Expresión a convertir
+     * @return ArrayList con los tokens
+     */
+
+    // Ejemplo: recibe (< 1 2) en forma de string y retorna un arraylist con 5 tokens y sus tipos correspondientes: (, <, 1, 2, )
+    public ArrayList<Token> tokenize(String expression) {
+        return null;
+    }
+
+    /**
+     * @description Método que valida si un string es un número
+     * @param str String a validar
+     * @return True o false en función de si es un número
+     */
+
+    // No sé si este método va a ser necesario al final 
+    public boolean isInteger(String str) {
+        try {
+            Integer.parseInt(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    /**
+     * @description Método que se encarga de validar la estructura de las expresiones
+     * @param expression Expresión a validar
+     * @return true si la expresión es válida, false en caso contrario
+     */
+
+     // Hacer un switch. Dependiendo de la palabra reservada se valida una sintaxis u otra. Que retorne boolean
     public Token validateExpression(ArrayList<Token> expression){
         String validatedArithmeticExpression = "";
 
@@ -43,62 +118,5 @@ public class Validator {
         }
 
         throw new RuntimeException("Expresión no válida");
-    }
-
-    /**
-     * @description Método que se encarga de llenar la pila con las expresiones validadas
-     * @return Token
-     */
-    public Token fillStack(){
-        for (int i = 0; i < code.length(); i++) {
-            if (code.charAt(i) == ')') {
-                ArrayList<Token> expression = new ArrayList<Token>();
-                while (!atoms.peek().getTypeValue().equals("PARENTHESIS")) {
-                    expression.add(0, atoms.pop());
-                }
-
-                atoms.pop();
-                Token result = validateExpression(expression);
-                atoms.push(result);
-
-            } else if (code.charAt(i) != ' ') {
-                if (Character.isDigit(code.charAt(i)) && !Character.isDigit(code.charAt(i+1))) {
-                    atoms.push(new Token(String.valueOf(code.charAt(i)), "INTEGER"));
-
-                } else if (Character.isDigit(code.charAt(i)) && Character.isDigit(code.charAt(i+1))) {
-                    String multipleDigitCharacter = String.valueOf(code.charAt(i));
-
-                    while (Character.isDigit(code.charAt(i + 1))) {
-                        if (code.charAt(i + 1) != ' ') {
-                            multipleDigitCharacter = multipleDigitCharacter + String.valueOf(code.charAt(i + 1));
-                        }
-                        i++;
-                    }
-                    atoms.push(new Token(multipleDigitCharacter, "INTEGER"));
-
-                } else if (code.charAt(i) == '(') {
-                    atoms.push(new Token(String.valueOf(code.charAt(i)), "PARENTHESIS"));
-                
-                } else {
-                    atoms.push(new Token(String.valueOf(code.charAt(i)), "OPERATOR"));
-                }
-            }
-        }
-
-        return atoms.pop();
-    }
-
-    /**
-     * @description Método que valida si un string es un número
-     * @param str String a validar
-     * @return True o false en función de si es un número
-     */
-    public boolean isInteger(String str) {
-        try {
-            Integer.parseInt(str);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
     }
 }
