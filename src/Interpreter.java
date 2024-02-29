@@ -69,9 +69,28 @@ public class Interpreter {
      * @param expression Expresión a evaluar en forma de tokens
      * @return Resultado de la operación
      */
-    public int calculateArithmetic(ArrayList<Token> expression) {
-        // Hacer un swtich para cada operador
-        return 0;
+    public int calculateArithmetic(ArrayList<Token> expression){
+        switch (expression.get(0).getValue()) {
+            case "+":
+                return Integer.parseInt(expression.get(1).getValue()) + Integer.parseInt(expression.get(2).getValue());
+        
+            case "-":
+                return Integer.parseInt(expression.get(1).getValue()) - Integer.parseInt(expression.get(2).getValue());
+
+            case "*":
+                return Integer.parseInt(expression.get(1).getValue()) * Integer.parseInt(expression.get(2).getValue());
+
+            case "/":
+                if (Integer.parseInt(expression.get(2).getValue()) == 0) {
+                    throw new ArithmeticException("Can't divide by zero");
+
+                } else {
+                    return Integer.parseInt(expression.get(1).getValue()) / Integer.parseInt(expression.get(2).getValue()); 
+                }
+                
+            default:
+                throw new IllegalArgumentException("Not a valid operator for Lisp");
+        }
     }
 
     /**
@@ -80,7 +99,44 @@ public class Interpreter {
      * @return Resultado en forma de boolean
      */
     public boolean compare(ArrayList<Token> expression) {
-        // Hacer un swtich para cada caso (>, <, >=, <=, equals)
-        return false;
+        switch (expression.get(0).getValue()) {
+            case ">":
+                if (Integer.parseInt(expression.get(1).getValue()) > Integer.parseInt(expression.get(2).getValue())) {
+                    return true;
+                } else {
+                    return false;
+                }
+                
+            case "<":
+                if (Integer.parseInt(expression.get(1).getValue()) < Integer.parseInt(expression.get(2).getValue())) {
+                    return true;
+                } else {
+                    return false;
+                }
+            
+            case ">=":
+                if (Integer.parseInt(expression.get(1).getValue()) >= Integer.parseInt(expression.get(2).getValue())) {
+                    return true;
+                } else {
+                    return false;
+                }
+            
+            case "<=":
+                if (Integer.parseInt(expression.get(1).getValue()) <= Integer.parseInt(expression.get(2).getValue())) {
+                    return true;
+                } else {
+                    return false;
+                }
+            
+            case "equal":
+                if (Integer.parseInt(expression.get(1).getValue()) == Integer.parseInt(expression.get(2).getValue())) {
+                    return true;
+                } else {
+                    return false;
+                }
+            
+            default:
+                throw new IllegalArgumentException("Not a valid comparator for Lisp");
+        }
     }
 }
