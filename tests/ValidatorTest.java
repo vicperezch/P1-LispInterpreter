@@ -29,4 +29,12 @@ public class ValidatorTest {
         boolean result = validator.validateExpressionSyntax(expression);
         Assert.assertEquals(true, result);
     }
+
+    @Test
+    public void testTokenize() {
+        Validator validator = new Validator();
+        Token token = validator.tokenize(">=");
+
+        Assert.assertEquals("COMPARATOR", token.getTypeValue());
+    }
 }
