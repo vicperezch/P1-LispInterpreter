@@ -30,44 +30,44 @@ public class Validator {
      */
 
     // Modificar este    
-    public Token fillStack(){
-        for (int i = 0; i < code.length(); i++) {
-            if (code.charAt(i) == ')') {
-                ArrayList<Token> expression = new ArrayList<Token>();
-                while (!executionStack.peek().getTypeValue().equals("PARENTHESIS")) {
-                    expression.add(0, executionStack.pop());
-                }
+    // public Token fillStack(){
+    //     for (int i = 0; i < code.length(); i++) {
+    //         if (code.charAt(i) == ')') {
+    //             ArrayList<Token> expression = new ArrayList<Token>();
+    //             while (!executionStack.peek().getTypeValue().equals("PARENTHESIS")) {
+    //                 expression.add(0, executionStack.pop());
+    //             }
 
-                executionStack.pop();
-                Token result = validateExpression(expression);
-                executionStack.push(result);
+    //             executionStack.pop();
+    //             //Token result = validateExpression(expression);
+    //             //executionStack.push(result);
 
-            } else if (code.charAt(i) != ' ') {
-                if (Character.isDigit(code.charAt(i)) && !Character.isDigit(code.charAt(i+1))) {
-                    executionStack.push(new Token(String.valueOf(code.charAt(i)), "INTEGER"));
+    //         } else if (code.charAt(i) != ' ') {
+    //             if (Character.isDigit(code.charAt(i)) && !Character.isDigit(code.charAt(i+1))) {
+    //                 executionStack.push(new Token(String.valueOf(code.charAt(i)), "INTEGER"));
 
-                } else if (Character.isDigit(code.charAt(i)) && Character.isDigit(code.charAt(i+1))) {
-                    String multipleDigitCharacter = String.valueOf(code.charAt(i));
+    //             } else if (Character.isDigit(code.charAt(i)) && Character.isDigit(code.charAt(i+1))) {
+    //                 String multipleDigitCharacter = String.valueOf(code.charAt(i));
 
-                    while (Character.isDigit(code.charAt(i + 1))) {
-                        if (code.charAt(i + 1) != ' ') {
-                            multipleDigitCharacter = multipleDigitCharacter + String.valueOf(code.charAt(i + 1));
-                        }
-                        i++;
-                    }
-                    executionStack.push(new Token(multipleDigitCharacter, "INTEGER"));
+    //                 while (Character.isDigit(code.charAt(i + 1))) {
+    //                     if (code.charAt(i + 1) != ' ') {
+    //                         multipleDigitCharacter = multipleDigitCharacter + String.valueOf(code.charAt(i + 1));
+    //                     }
+    //                     i++;
+    //                 }
+    //                 executionStack.push(new Token(multipleDigitCharacter, "INTEGER"));
 
-                } else if (code.charAt(i) == '(') {
-                    executionStack.push(new Token(String.valueOf(code.charAt(i)), "PARENTHESIS"));
+    //             } else if (code.charAt(i) == '(') {
+    //                 executionStack.push(new Token(String.valueOf(code.charAt(i)), "PARENTHESIS"));
                 
-                } else {
-                    executionStack.push(new Token(String.valueOf(code.charAt(i)), "OPERATOR"));
-                }
-            }
-        }
+    //             } else {
+    //                 executionStack.push(new Token(String.valueOf(code.charAt(i)), "OPERATOR"));
+    //             }
+    //         }
+    //     }
 
-        return executionStack.pop();
-    }
+    //     return executionStack.pop();
+    // }
 
     /**
      * Convierte una expresión en una lista de tokens según su tipo
@@ -101,22 +101,32 @@ public class Validator {
      * @param expression Expresión a validar
      * @return true si la expresión es válida, false en caso contrario
      */
+    public boolean validateExpressionSyntax(ArrayList<Token> expression){
+        boolean result = false;
 
-     // Hacer un switch. Dependiendo de la palabra reservada se valida una sintaxis u otra. Que retorne boolean
-    public Token validateExpression(ArrayList<Token> expression){
-        String validatedArithmeticExpression = "";
+        if (expression.size() >= 5) {
+            String keyWord = expression.get(1).getTypeValue();
 
-        if (expression.size() >= 3) {
-            if (expression.get(0).getTypeValue().equals("OPERATOR")) {
-                if (expression.get(1).getTypeValue().equals("INTEGER") && expression.get(2).getTypeValue().equals("INTEGER")) {
-                    for (Token token : expression) {
-                        validatedArithmeticExpression =  validatedArithmeticExpression + token.getValue() + ",";
+            switch (keyWord) {
+                case "OPERATOR":
+                    if (expression.get(2).getTypeValue().equals("INTEGER") && expression.get(3).getTypeValue().equals("INTEGER")) {
+                        result = true;
+                    } else {
+                        result = false;
                     }
-                    return new Token("(," + validatedArithmeticExpression + ")", "INTEGER");
-                }
+                    break;
+
+                case "COMPARATOR":
+                    if (expression.get(2).getTypeValue().equals("INTEGER") && expression.get(3).getTypeValue().equals("INTEGER")) {
+                        result = true;
+                    } else {
+                        result = false;
+                    }
+                    break;
+                default:
+                    result = false;
             }
         }
-
-        throw new RuntimeException("Expresión no válida");
+        return result;
     }
 }
