@@ -20,6 +20,7 @@ public class Validator {
     public Validator() {
         Reader reader = new Reader();
         this.executionStack = new Stack<>();
+        executionStack.push(new Token("#","#"));
         this.code = reader.readFile();
         this.interpreter = new Interpreter();
     }
@@ -29,8 +30,45 @@ public class Validator {
      * @return Token con el resultado del código
      */    
     public Token fillStack(){
-        return null;
+        String operators = "+ - * / ";
+        String comparators = "> < >= <= == !=";
+        String number = "";
+        ArrayList<Token> expression = new ArrayList<>();
+        for (int i = 0; i < code.length(); i++) {
+            if(code.charAt(i)=='('){
+                executionStack.push(tokenize(String.valueOf(code.charAt(i))));
+            }else if(code.charAt(i)==')'){
+                expression.add(0,executionStack.pop());
+                expression.add(0,executionStack.pop());
+                expression.add(0,executionStack.pop());
+                executionStack.pop();
+                switch (expression.get(0).getTypeValue()) {
+                    case "OPERATOR":
+                        executionStack.push(tokenize(String.valueOf(interpreter.calculateArithmetic(expression))));
+                        break;
+                    case "COMPARATOR":
+                        executionStack.push(tokenize(String.valueOf(interpreter.compare(expression))));
+                        break;
+                
+                    default:
+                        break;
+                }
+                expression.clear();
+            }else if(code.charAt(i)!=' '){
+                if(operators.contains(String.valueOf(code.charAt(i))) || comparators.contains(String.valueOf(code.charAt(i)))){
+                    executionStack.push(tokenize(String.valueOf(code.charAt(i))));
+                }else if(isInteger(String.valueOf(code.charAt(i)))){
+                    number+=code.charAt(i);
+                    if(!isInteger(String.valueOf(code.charAt(i+1)))){
+                        executionStack.push(tokenize(number));
+                        number="";
+                    }
+                }
+            }
+        }
+        return executionStack.pop();
     }
+
 
 
     /**
@@ -41,6 +79,7 @@ public class Validator {
     public Token tokenize(String value) {
         String operators = "+ - * / ";
         String comparators = "> < >= <= == !=";
+        String delimiters = "( )";
 
         if (operators.contains(value)) {
             return new Token(value, "OPERATOR");
@@ -48,8 +87,14 @@ public class Validator {
         } else if (comparators.contains(value)) {
             return new Token(value, "COMPARATOR");
 
+        } else if (delimiters.contains(value)) {
+            return new Token(value, "PARENTHESIS");
+
         } else if (isInteger(value)) {
             return new Token(value, "INTEGER");
+
+        }else if(value.equals("true") || value.equals("false")){
+            return new Token(value, "BOOLEAN");
         }
 
         throw new IllegalArgumentException("Valor inválido");
