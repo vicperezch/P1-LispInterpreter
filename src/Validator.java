@@ -2,6 +2,7 @@ package src;
 
 import java.util.ArrayList;
 import java.util.Stack;
+import java.util.HashMap;
 
 /**
  * @author Diego Flores & Victor Pérez
@@ -12,14 +13,32 @@ import java.util.Stack;
 public class Validator {
     private Stack<Token> executionStack;
     private Interpreter interpreter;
+    private HashMap<String, String> reservedWords;
 
     /**
      * @description Constructor de clase
      */
     public Validator() {
         this.executionStack = new Stack<>();
-        executionStack.push(new Token("#","#"));
         this.interpreter = new Interpreter();
+        this.reservedWords = new HashMap<>() {{
+            put("(", "PARENTHESIS");
+            put(")", "PARENTHESIS");
+            put("+", "OPERATOR");
+            put("-", "OPERATOR");
+            put("*", "OPERATOR");
+            put("/", "OPERATOR");
+            put(">", "COMPARATOR");
+            put("<", "COMPARATOR");
+            put(">=", "COMPARATOR");
+            put("<=", "COMPARATOR");
+            put("!=", "COMPARATOR");
+            put("true", "BOOLEAN");
+            put("false", "BOOLEAN");
+            put("equal", "EQUAL");
+        }};
+
+        executionStack.push(new Token("#","#"));
     }
 
     /**
@@ -27,48 +46,57 @@ public class Validator {
      * @return Token con el resultado del código
      */    
     public Token fillStack(String code){
-        String operators = "+ - * / ";
-        String comparators = "> < >= <= == !=";
         String number = "";
         String delimiters = "( )";
         ArrayList<Token> expression = new ArrayList<>();
+
         for (int i = 0; i < code.length(); i++) {
-            if(code.charAt(i)=='('){
-                executionStack.push(tokenize(String.valueOf(code.charAt(i))));
-            }else if(code.charAt(i)==')'){
+            char c = code.charAt(i);
+
+            if(c == '('){
+                executionStack.push(tokenize(String.valueOf(c)));
+
+            } else if(c ==')'){
                 expression.add(0,executionStack.pop());
                 expression.add(0,executionStack.pop());
                 expression.add(0,executionStack.pop());
                 executionStack.pop();
+
                 switch (expression.get(0).getTypeValue()) {
                     case "OPERATOR":
                         executionStack.push(tokenize(String.valueOf(interpreter.calculateArithmetic(expression))));
                         break;
+
                     case "COMPARATOR":
                         executionStack.push(tokenize(String.valueOf(interpreter.compare(expression))));
                         break;
+
                     case "EQUAL":
                         executionStack.push(tokenize(String.valueOf(interpreter.compare(expression))));
                         break;
+
                     default:
                         break;
                 }
+
                 expression.clear();
 
-            }else if(code.charAt(i)!=' '){
-                if(operators.contains(String.valueOf(code.charAt(i))) || comparators.contains(String.valueOf(code.charAt(i)))){
-                    executionStack.push(tokenize(String.valueOf(code.charAt(i))));
+            } else if (c != ' ') {
+                if (reservedWords.containsKey(String.valueOf(c))) {
+                    executionStack.push(tokenize(String.valueOf(c)));
 
-                }else if(isInteger(String.valueOf(code.charAt(i)))){
-                    number+=code.charAt(i);
+                } else if (isInteger(String.valueOf(c))) {
+                    number += c;
+
                     if(!isInteger(String.valueOf(code.charAt(i+1)))){
                         executionStack.push(tokenize(number));
-                        number="";
+                        number = "";
                     }
 
                 } else {
                     String keyword = "";
-                    while (i < code.length() && code.charAt(i) != ' ' && !delimiters.contains(String.valueOf(code.charAt(i)))) {
+
+                    while (i < code.length() && c != ' ' && !delimiters.contains(String.valueOf(code.charAt(i)))) {
                         keyword += code.charAt(i);
                         i++;
                     }
@@ -88,27 +116,11 @@ public class Validator {
      * @return Token
      */
     public Token tokenize(String value) {
-        String operators = "+ - * / ";
-        String comparators = "> < >= <= == !=";
-        String delimiters = "( )";
-
-        if (operators.contains(value)) {
-            return new Token(value, "OPERATOR");
-
-        } else if (comparators.contains(value)) {
-            return new Token(value, "COMPARATOR");
-
-        } else if (delimiters.contains(value)) {
-            return new Token(value, "PARENTHESIS");
+        if (reservedWords.containsKey(value)) {
+            return new Token(value, reservedWords.get(value));
 
         } else if (isInteger(value)) {
             return new Token(value, "INTEGER");
-
-        }else if(value.equals("true") || value.equals("false")){
-            return new Token(value, "BOOLEAN");
-            
-        }else if (value.equals("equal")){
-            return new Token(value, "EQUAL");
         }
 
         throw new IllegalArgumentException("Valor inválido");
