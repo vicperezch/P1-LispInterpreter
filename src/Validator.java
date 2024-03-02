@@ -11,17 +11,14 @@ import java.util.Stack;
  */
 public class Validator {
     private Stack<Token> executionStack;
-    private String code;
     private Interpreter interpreter;
 
     /**
      * @description Constructor de clase
      */
     public Validator() {
-        Reader reader = new Reader();
         this.executionStack = new Stack<>();
         executionStack.push(new Token("#","#"));
-        this.code = reader.readFile();
         this.interpreter = new Interpreter();
     }
 
@@ -29,7 +26,7 @@ public class Validator {
      * @description Método que se encarga de llenar la pila y validar las expresiones
      * @return Token con el resultado del código
      */    
-    public Token fillStack(){
+    public Token fillStack(String code){
         String operators = "+ - * / ";
         String comparators = "> < >= <= == !=";
         String number = "";
@@ -68,8 +65,6 @@ public class Validator {
         }
         return executionStack.pop();
     }
-
-
 
     /**
      * Convierte un valor a un token

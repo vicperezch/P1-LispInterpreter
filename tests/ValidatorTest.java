@@ -37,4 +37,25 @@ public class ValidatorTest {
 
         Assert.assertEquals("COMPARATOR", token.getTypeValue());
     }
+
+    @Test
+    public void testOperacionAritmeticaFillStack(){
+        String instruccion = "(* (+ (* 45 (/ 10 2)) (- 50 10)) (* 21 2))";
+        Validator validator = new Validator();
+        Assert.assertEquals("11130", validator.fillStack(instruccion).getValue());
+    }
+
+    @Test
+    public void testComparacionBooleanaFillStack(){
+        String instruccion = "(> 21 2)";
+        Validator validator = new Validator();
+        Assert.assertEquals("true", validator.fillStack(instruccion).getValue());
+    }
+
+    @Test
+    public void testOperacionAritmeticaYBooleanaFillStack(){
+        String instruccion = "(> (+ (* 45 (/ 10 2)) (- 50 10)) (* 21 2))";
+        Validator validator = new Validator();
+        Assert.assertEquals("true", validator.fillStack(instruccion).getValue());
+    }
 }
