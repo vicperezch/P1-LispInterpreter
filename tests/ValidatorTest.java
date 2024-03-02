@@ -58,4 +58,11 @@ public class ValidatorTest {
         Validator validator = new Validator();
         Assert.assertEquals("true", validator.fillStack(instruccion).getValue());
     }
+
+    @Test
+    public void testEqualKeywordFillStack() {
+        String instruccion = "(equal 12 12)";
+        Validator validator = new Validator();
+        Assert.assertEquals("true", validator.fillStack(instruccion).getValue());
+    }
 }

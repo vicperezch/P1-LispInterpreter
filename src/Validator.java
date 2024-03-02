@@ -30,6 +30,7 @@ public class Validator {
         String operators = "+ - * / ";
         String comparators = "> < >= <= == !=";
         String number = "";
+        String delimiters = "( )";
         ArrayList<Token> expression = new ArrayList<>();
         for (int i = 0; i < code.length(); i++) {
             if(code.charAt(i)=='('){
@@ -46,19 +47,34 @@ public class Validator {
                     case "COMPARATOR":
                         executionStack.push(tokenize(String.valueOf(interpreter.compare(expression))));
                         break;
-                
+                    case "EQUAL":
+                        executionStack.push(tokenize(String.valueOf(interpreter.compare(expression))));
+                        break;
                     default:
                         break;
                 }
                 expression.clear();
+
             }else if(code.charAt(i)!=' '){
                 if(operators.contains(String.valueOf(code.charAt(i))) || comparators.contains(String.valueOf(code.charAt(i)))){
                     executionStack.push(tokenize(String.valueOf(code.charAt(i))));
+
                 }else if(isInteger(String.valueOf(code.charAt(i)))){
                     number+=code.charAt(i);
                     if(!isInteger(String.valueOf(code.charAt(i+1)))){
                         executionStack.push(tokenize(number));
                         number="";
+                    }
+
+                } else {
+                    String keyword = "";
+                    while (i < code.length() && code.charAt(i) != ' ' && !delimiters.contains(String.valueOf(code.charAt(i)))) {
+                        keyword += code.charAt(i);
+                        i++;
+                    }
+            
+                    if (!keyword.isEmpty()) {
+                        executionStack.push(tokenize(keyword));
                     }
                 }
             }
@@ -90,6 +106,9 @@ public class Validator {
 
         }else if(value.equals("true") || value.equals("false")){
             return new Token(value, "BOOLEAN");
+            
+        }else if (value.equals("equal")){
+            return new Token(value, "EQUAL");
         }
 
         throw new IllegalArgumentException("Valor inválido");
