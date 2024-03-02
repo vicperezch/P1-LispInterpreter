@@ -42,6 +42,7 @@ public class ValidatorTest {
     public void testOperacionAritmeticaFillStack(){
         String instruccion = "(* (+ (* 45 (/ 10 2)) (- 50 10)) (* 21 2))";
         Validator validator = new Validator();
+
         Assert.assertEquals("11130", validator.fillStack(instruccion).getValue());
     }
 
@@ -49,6 +50,7 @@ public class ValidatorTest {
     public void testComparacionBooleanaFillStack(){
         String instruccion = "(> 21 2)";
         Validator validator = new Validator();
+
         Assert.assertEquals("true", validator.fillStack(instruccion).getValue());
     }
 
@@ -56,6 +58,7 @@ public class ValidatorTest {
     public void testOperacionAritmeticaYBooleanaFillStack(){
         String instruccion = "(> (+ (* 45 (/ 10 2)) (- 50 10)) (* 21 2))";
         Validator validator = new Validator();
+
         Assert.assertEquals("true", validator.fillStack(instruccion).getValue());
     }
 
@@ -63,6 +66,15 @@ public class ValidatorTest {
     public void testEqualKeywordFillStack() {
         String instruccion = "(equal 12 12)";
         Validator validator = new Validator();
+
         Assert.assertEquals("true", validator.fillStack(instruccion).getValue());
+    }
+
+    @Test
+    public void testConditional() {
+        String instruccion = "(cond ((equal 2 2) 6) (t (+ 2 4))";
+        Validator validator = new Validator();
+
+        Assert.assertEquals("6", validator.fillStack(instruccion).getValue());
     }
 }

@@ -36,6 +36,7 @@ public class Validator {
             put("true", "BOOLEAN");
             put("false", "BOOLEAN");
             put("equal", "EQUAL");
+            put("cond", "COND");
         }};
 
         executionStack.push(new Token("#","#"));
@@ -53,16 +54,25 @@ public class Validator {
         for (int i = 0; i < code.length(); i++) {
             char c = code.charAt(i);
 
-            if(c == '('){
+            if (c == '(') {
                 executionStack.push(tokenize(String.valueOf(c)));
 
-            } else if(c ==')'){
-                expression.add(0,executionStack.pop());
-                expression.add(0,executionStack.pop());
-                expression.add(0,executionStack.pop());
+            } else if(c == ')') {
+                while (!executionStack.peek().getValue().equals("(")) {
+                    expression.add(0,executionStack.pop());
+                }
+        
                 executionStack.pop();
 
-                switch (expression.get(0).getTypeValue()) {
+                String keyWord = expression.get(0).getTypeValue();
+
+                switch (keyWord) {
+                    case "BOOLEAN":
+                        if (expression.get(0).getValue().equals("true")) {
+                            executionStack.push(expression.get(1));
+                        }
+                        break;
+
                     case "OPERATOR":
                         executionStack.push(tokenize(String.valueOf(interpreter.calculateArithmetic(expression))));
                         break;
@@ -73,6 +83,10 @@ public class Validator {
 
                     case "EQUAL":
                         executionStack.push(tokenize(String.valueOf(interpreter.compare(expression))));
+                        break;
+                    
+                    case "COND":
+                        executionStack.push(tokenize(String.valueOf(interpreter.cond(expression))));
                         break;
 
                     default:
@@ -88,7 +102,7 @@ public class Validator {
                 } else if (isInteger(String.valueOf(c))) {
                     number += c;
 
-                    if(!isInteger(String.valueOf(code.charAt(i+1)))){
+                    if (!isInteger(String.valueOf(code.charAt(i+1)))) {
                         executionStack.push(tokenize(number));
                         number = "";
                     }
@@ -107,6 +121,7 @@ public class Validator {
                 }
             }
         }
+
         return executionStack.pop();
     }
 
@@ -116,11 +131,16 @@ public class Validator {
      * @return Token
      */
     public Token tokenize(String value) {
+
+        // Si el valor es una palabra reservada
         if (reservedWords.containsKey(value)) {
             return new Token(value, reservedWords.get(value));
 
         } else if (isInteger(value)) {
             return new Token(value, "INTEGER");
+
+        } else if (value.equals("t")) {
+            return new Token("true", "BOOLEAN");
         }
 
         throw new IllegalArgumentException("Valor inválido");

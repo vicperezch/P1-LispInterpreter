@@ -92,4 +92,8 @@ public class Interpreter {
                 throw new IllegalArgumentException("Not a valid comparator for Lisp");
         }
     }
+
+    public String cond(ArrayList<Token> expression) {
+        return expression.get(1).getValue();
+    }
 }
