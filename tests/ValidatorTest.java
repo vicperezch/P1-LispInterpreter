@@ -77,4 +77,12 @@ public class ValidatorTest {
 
         Assert.assertEquals("6", validator.fillStack(instruccion).getValue());
     }
+
+    @Test
+    public void testListKeyword(){
+        String instruccion = "(list 1 2 3 4 5 6)";
+        Validator validator = new Validator();
+
+        Assert.assertEquals("1 2 3 4 5 6", validator.fillStack(instruccion).getValue());
+    }
 }

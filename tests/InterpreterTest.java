@@ -52,4 +52,15 @@ public class InterpreterTest {
         Exception exception = assertThrows(ArithmeticException.class, () -> myInterpreter.calculateArithmetic(expression));
         assertEquals("Can't divide by zero", exception.getMessage());
     }
+
+    @Test
+    public void listGeneratorTest(){
+        Interpreter myInterpreter = new Interpreter();
+        ArrayList<Token> expression = new ArrayList<Token>();
+        expression.add(new Token("list", "LIST"));
+        expression.add(new Token("1", "INTEGER"));
+        expression.add(new Token("2", "INTEGER"));
+        expression.add(new Token("3", "INTEGER"));
+        assertEquals("list 1 2 3", myInterpreter.list(expression));
+    }
 }
