@@ -37,6 +37,7 @@ public class Validator {
             put("false", "BOOLEAN");
             put("equal", "EQUAL");
             put("cond", "COND");
+            put("list", "LIST");
         }};
 
         executionStack.push(new Token("#","#"));
@@ -88,6 +89,9 @@ public class Validator {
                     case "COND":
                         executionStack.push(tokenize(String.valueOf(interpreter.cond(expression))));
                         break;
+                    
+                    case "LIST":
+                        return tokenize(interpreter.list(expression));
 
                     default:
                         break;
@@ -96,6 +100,7 @@ public class Validator {
                 expression.clear();
 
             } else if (c != ' ') {
+                //Si el caracter existe entre las palabras reservadas
                 if (reservedWords.containsKey(String.valueOf(c))) {
                     executionStack.push(tokenize(String.valueOf(c)));
 
@@ -135,14 +140,16 @@ public class Validator {
         // Si el valor es una palabra reservada
         if (reservedWords.containsKey(value)) {
             return new Token(value, reservedWords.get(value));
-
+        // Si el valor es un numero
         } else if (isInteger(value)) {
             return new Token(value, "INTEGER");
 
         } else if (value.equals("t")) {
             return new Token("true", "BOOLEAN");
+        
+        }else if(value.substring(0, 4).equals("list")){
+            return new Token(value.substring(5), "LIST_ELEMENTS");
         }
-
         throw new IllegalArgumentException("Valor inválido");
     }
 

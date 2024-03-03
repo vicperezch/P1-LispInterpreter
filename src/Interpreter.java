@@ -96,4 +96,13 @@ public class Interpreter {
     public String cond(ArrayList<Token> expression) {
         return expression.get(1).getValue();
     }
+
+    public String list(ArrayList<Token> expression){
+        StringBuilder list = new StringBuilder();
+        for (int i = 0; i < expression.size(); i++) {
+            list.append(expression.get(i).getValue());
+            if(i<expression.size()-1) list.append(" ");
+        } 
+        return list.toString(); 
+    }
 }
