@@ -38,6 +38,7 @@ public class Validator {
             put("equal", "EQUAL");
             put("cond", "COND");
             put("list", "LIST");
+            put("quote", "QUOTE");
         }};
 
         executionStack.push(new Token("#","#"));
@@ -48,6 +49,7 @@ public class Validator {
      * @return Token con el resultado del código
      */    
     public Token fillStack(String code){
+        boolean isQuote = false;
         String number = "";
         String delimiters = "( )";
         ArrayList<Token> expression = new ArrayList<>();
@@ -66,6 +68,10 @@ public class Validator {
                 executionStack.pop();
 
                 String keyWord = expression.get(0).getTypeValue();
+
+                if (isQuote) {
+                   keyWord = "QUOTE";
+                } 
 
                 switch (keyWord) {
                     case "BOOLEAN":
@@ -91,7 +97,12 @@ public class Validator {
                         break;
                     
                     case "LIST":
-                        return tokenize(interpreter.list(expression));
+                        executionStack.push(tokenize(interpreter.list(expression)));
+                        break;
+
+                    case "QUOTE":
+                        executionStack.push(tokenize(String.valueOf(interpreter.quote(expression))));
+                        break;
 
                     default:
                         break;
@@ -123,6 +134,11 @@ public class Validator {
                     if (!keyword.isEmpty()) {
                         executionStack.push(tokenize(keyword));
                     }
+
+                    if (keyword.equals("quote")) {
+                        isQuote = true;
+                    }
+
                 }
             }
         }
@@ -136,7 +152,6 @@ public class Validator {
      * @return Token
      */
     public Token tokenize(String value) {
-
         // Si el valor es una palabra reservada
         if (reservedWords.containsKey(value)) {
             return new Token(value, reservedWords.get(value));
@@ -149,7 +164,11 @@ public class Validator {
         
         }else if(value.substring(0, 4).equals("list")){
             return new Token(value.substring(5), "LIST_ELEMENTS");
+
+        } else if (value.contains("(") && value.contains(")")) {
+            return new Token(value, "QUOTED_EXPRESSION");
         }
+        
         throw new IllegalArgumentException("Valor inválido");
     }
 

@@ -105,4 +105,12 @@ public class Interpreter {
         } 
         return list.toString(); 
     }
+
+    public String quote(ArrayList<Token> expression) {
+        ArrayList<String> atoms = new ArrayList<String>();
+        for (Token token : expression) {
+            atoms.add(token.getValue());
+        }
+        return "(" + String.join(" ", atoms) + ")";
+    }
 }
