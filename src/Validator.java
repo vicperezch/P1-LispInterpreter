@@ -39,6 +39,7 @@ public class Validator {
             put("cond", "COND");
             put("list", "LIST");
             put("quote", "QUOTE");
+            put("atom", "ATOM");
         }};
 
         executionStack.push(new Token("#","#"));
@@ -103,6 +104,9 @@ public class Validator {
                     case "QUOTE":
                         executionStack.push(tokenize(String.valueOf(interpreter.quote(expression))));
                         break;
+
+                    case "ATOM":
+                        executionStack.push(tokenize(String.valueOf(interpreter.atom(expression))));
 
                     default:
                         break;

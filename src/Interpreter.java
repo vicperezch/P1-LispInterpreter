@@ -113,4 +113,22 @@ public class Interpreter {
         }
         return "(" + String.join(" ", atoms) + ")";
     }
+
+    /**
+     * @description Método que verifica si la expression es un Atom
+     * @param expression
+     * @return true si es un Atom o false si no lo es
+     */
+    public boolean atom(ArrayList<Token> expression) {
+        if (expression.size() == 2) {
+            if (expression.get(1).getTypeValue().equals("LIST_ELEMENTS")){
+                return false;
+            } else if (expression.get(1).getTypeValue().equals("INTEGER") || expression.get(1).getTypeValue().equals("STRING") || expression.get(1).getTypeValue().equals("OPERATOR")){
+                return true;
+            } else {
+                throw new IllegalArgumentException("Not a valid Atom for Lisp");
+            }
+        }
+        return false;
+    }
 }
