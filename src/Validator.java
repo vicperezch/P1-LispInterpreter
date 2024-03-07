@@ -13,7 +13,9 @@ import java.util.HashMap;
 public class Validator {
     private Stack<Token> executionStack;
     private Interpreter interpreter;
-    private HashMap<String, String> reservedWords;
+    private HashMap<String, String> keyWords;
+    private boolean isQuoteExpression;
+    private boolean isCondExpression;
 
     /**
      * @description Constructor de clase
@@ -21,7 +23,7 @@ public class Validator {
     public Validator() {
         this.executionStack = new Stack<>();
         this.interpreter = new Interpreter();
-        this.reservedWords = new HashMap<>() {{
+        this.keyWords = new HashMap<>() {{
             put("(", "PARENTHESIS");
             put(")", "PARENTHESIS");
             put("+", "OPERATOR");
@@ -33,16 +35,16 @@ public class Validator {
             put(">=", "COMPARATOR");
             put("<=", "COMPARATOR");
             put("!=", "COMPARATOR");
-            put("true", "BOOLEAN");
-            put("false", "BOOLEAN");
+            put("T", "BOOLEAN");
+            put("NIL", "BOOLEAN");
             put("equal", "EQUAL");
             put("cond", "COND");
             put("list", "LIST");
             put("quote", "QUOTE");
             put("atom", "ATOM");
         }};
-
-        executionStack.push(new Token("#","#"));
+        this.isCondExpression = false;
+        this.isQuoteExpression = false;
     }
 
     /**
@@ -50,11 +52,11 @@ public class Validator {
      * @return Token con el resultado del código
      */    
     public Token fillStack(String code){
-        boolean isQuote = false;
         String number = "";
         String delimiters = "( )";
         ArrayList<Token> expression = new ArrayList<>();
 
+        executionStack.push(new Token("#","#"));
         for (int i = 0; i < code.length(); i++) {
             char c = code.charAt(i);
 
@@ -63,14 +65,14 @@ public class Validator {
 
             } else if(c == ')') {
                 while (!executionStack.peek().getValue().equals("(")) {
-                    expression.add(0,executionStack.pop());
+                    expression.add(0, executionStack.pop());
                 }
         
                 executionStack.pop();
 
                 String keyWord = expression.get(0).getTypeValue();
 
-                if (isQuote) {
+                if (isQuoteExpression) {
                     expression.get(0).setTypeValue("QUOTE");
                     keyWord = expression.get(0).getTypeValue();
                 }
@@ -79,7 +81,8 @@ public class Validator {
     
                 switch (keyWord) {
                     case "BOOLEAN":
-                        if (expression.get(0).getValue().equals("true")) {
+                        if (expression.get(0).getValue().equals("T") && isCondExpression) {
+                            executionStack.push(expression.get(0));
                             executionStack.push(expression.get(1));
                         }
                         break;
@@ -97,7 +100,12 @@ public class Validator {
                         break;
                     
                     case "COND":
-                        executionStack.push(tokenize(String.valueOf(interpreter.cond(expression))));
+                        String result = interpreter.cond(expression);
+                        if (result != null) {
+                            executionStack.push(tokenize(result));
+                        }
+
+                        isCondExpression = false;
                         break;
                     
                     case "LIST":
@@ -119,11 +127,7 @@ public class Validator {
                 expression.clear();
 
             } else if (c != ' ') {
-                //Si el caracter existe entre las palabras reservadas
-                if (reservedWords.containsKey(String.valueOf(c))) {
-                    executionStack.push(tokenize(String.valueOf(c)));
-
-                } else if (isInteger(String.valueOf(c))) {
+                if (isInteger(String.valueOf(c))) {
                     number += c;
 
                     if (!isInteger(String.valueOf(code.charAt(i+1)))) {
@@ -144,11 +148,12 @@ public class Validator {
                     }
 
                     if (keyword.equals("quote")) {
-                        isQuote = true;
-                    }
+                        isQuoteExpression = true;
 
+                    } else if (keyword.equals("cond")) {
+                        isCondExpression = true;
                     }
-                    
+                }    
             }
         }
 
@@ -162,16 +167,19 @@ public class Validator {
      */
     public Token tokenize(String value) {
         // Si el valor es una palabra reservada
-        if (reservedWords.containsKey(value)) {
-            return new Token(value, reservedWords.get(value));
+        if (keyWords.containsKey(value)) {
+            return new Token(value, keyWords.get(value));
 
         // Si el valor es un numero
         } else if (isInteger(value)) {
             return new Token(value, "INTEGER");
 
-        } else if (value.equals("t")) {
-            return new Token("true", "BOOLEAN");
+        } else if (value.equals("true") || value.equals("t")) {
+            return new Token("T", "BOOLEAN");
         
+        } else if (value.equals("false")) {
+            return new Token("NIL", "BOOLEAN");
+
         } else if (value.substring(0, 4).equals("list")) {
             return new Token(value.substring(5), "LIST_ELEMENTS");
 
@@ -207,6 +215,7 @@ public class Validator {
      */
     public void validateExpressionSyntax(ArrayList<Token> expression){
         String keyWord = expression.get(0).getTypeValue();
+        String value = expression.get(0).getValue();
 
         switch (keyWord) {
             case "OPERATOR":
@@ -222,15 +231,32 @@ public class Validator {
                 break;
 
             case "LIST":
-                for (int i = 1; i <= expression.size()-1; i++){
+                for (int i = 1; i <= expression.size() - 1; i++){
                     if (!expression.get(i).getTypeValue().equals("INTEGER")) {
                         throw new IllegalArgumentException("Not a valid syntax for Lisp: Elements in LIST must be of type INTEGER.");
                     }
                 }
                 break;
             
+            case "BOOLEAN":
+                if (!isCondExpression) {
+                    throw new IllegalArgumentException("Not a valid syntax for Lisp: BOOLEAN must be inside a COND expression.");
+                }
+
+                if (expression.size() > 2) {
+                    throw new IllegalArgumentException("Not a valid syntax for Lisp: Incorrect number of parameters in COND expression.");
+                }
+                break;
+
             case "COND":
-                // V
+                String exp = "";
+                for (Token token : expression) {
+                    exp += token.getTypeValue() + " ";
+                }
+
+                if (!exp.matches("^\\s*COND(?:\\s+BOOLEAN\\s+\\w+\\s*)+\\s*")) {
+                    throw new IllegalArgumentException("Not a valid syntax for Lisp: Incorrect COND expression.");
+                }
                 break;
 
             case "ATOM":  
@@ -240,7 +266,7 @@ public class Validator {
                 break;
         
             default:
-                break;
+                throw new IllegalArgumentException("Invalid syntax: " + value + " is not a valid keyword for Lisp.");
         }
     }
 }

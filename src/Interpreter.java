@@ -93,15 +93,28 @@ public class Interpreter {
         }
     }
 
+    /**
+     * @description Método que se encarga de realizar la operación de condicional
+     * @param expression Expresión a evaluar
+     * @return Resultado del COND
+     */
     public String cond(ArrayList<Token> expression) {
-        return expression.get(1).getValue();
+        for (int i = 1; i < expression.size(); i++) {
+            if (expression.get(i).getTypeValue().equals("BOOLEAN")) {
+                if (expression.get(i).getValue().equals("T")) {
+                    return expression.get(i + 1).getValue();
+                }
+            }
+        }
+
+        return null;
     }
 
     public String list(ArrayList<Token> expression){
         StringBuilder list = new StringBuilder();
         for (int i = 0; i < expression.size(); i++) {
             list.append(expression.get(i).getValue());
-            if(i<expression.size()-1) list.append(" ");
+            if(i<expression.size() - 1) list.append(" ");
         } 
         return list.toString(); 
     }

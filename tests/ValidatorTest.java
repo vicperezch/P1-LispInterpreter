@@ -32,7 +32,7 @@ public class ValidatorTest {
         String instruccion = "(> 21 2)";
         Validator validator = new Validator();
 
-        Assert.assertEquals("true", validator.fillStack(instruccion).getValue());
+        Assert.assertEquals("T", validator.fillStack(instruccion).getValue());
     }
 
     @Test
@@ -40,7 +40,7 @@ public class ValidatorTest {
         String instruccion = "(> (+ (* 45 (/ 10 2)) (- 50 10)) (* 21 2))";
         Validator validator = new Validator();
 
-        Assert.assertEquals("true", validator.fillStack(instruccion).getValue());
+        Assert.assertEquals("T", validator.fillStack(instruccion).getValue());
     }
 
     @Test
@@ -48,15 +48,15 @@ public class ValidatorTest {
         String instruccion = "(equal 12 12)";
         Validator validator = new Validator();
 
-        Assert.assertEquals("true", validator.fillStack(instruccion).getValue());
+        Assert.assertEquals("T", validator.fillStack(instruccion).getValue());
     }
 
     @Test
     public void testConditional() {
-        String instruccion = "(cond ((equal 2 2) 6) (t (+ 2 4))";
+        String instruccion = "(cond ((equal 2 3) 6) (t (+ 1 3)))";
         Validator validator = new Validator();
 
-        Assert.assertEquals("6", validator.fillStack(instruccion).getValue());
+        Assert.assertEquals("4", validator.fillStack(instruccion).getValue());
     }
 
     @Test
@@ -72,6 +72,6 @@ public class ValidatorTest {
         String instruccion = "(atom 1)";
         Validator validator = new Validator();
 
-        Assert.assertEquals("true", validator.fillStack(instruccion).getValue());
+        Assert.assertEquals("T", validator.fillStack(instruccion).getValue());
     }
 }
