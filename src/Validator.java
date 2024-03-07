@@ -74,6 +74,8 @@ public class Validator {
                     expression.get(0).setTypeValue("QUOTE");
                     keyWord = expression.get(0).getTypeValue();
                 }
+
+                validateExpressionSyntax(expression);
     
                 switch (keyWord) {
                     case "BOOLEAN":
@@ -170,7 +172,7 @@ public class Validator {
         } else if (value.equals("t")) {
             return new Token("true", "BOOLEAN");
         
-        }else if(value.substring(0, 4).equals("list")){
+        } else if (value.substring(0, 4).equals("list")) {
             return new Token(value.substring(5), "LIST_ELEMENTS");
 
         } else if (value.charAt(0) == '\'') {
@@ -202,35 +204,43 @@ public class Validator {
     /**
      * @description Método que se encarga de validar la estructura de las expresiones
      * @param expression Expresión a validar
-     * @return true si la expresión es válida, false en caso contrario
      */
-    public boolean validateExpressionSyntax(ArrayList<Token> expression){
-        boolean result = false;
+    public void validateExpressionSyntax(ArrayList<Token> expression){
+        String keyWord = expression.get(0).getTypeValue();
 
-        if (expression.size() >= 5) {
-            String keyWord = expression.get(1).getTypeValue();
-
-            switch (keyWord) {
-                case "OPERATOR":
-                    if (expression.get(2).getTypeValue().equals("INTEGER") && expression.get(3).getTypeValue().equals("INTEGER")) {
-                        result = true;
-                    } else {
-                        result = false;
+        switch (keyWord) {
+            case "OPERATOR":
+            case "COMPARATOR":
+            case "EQUAL":
+                if (expression.size() == 3) {
+                    if (!expression.get(1).getTypeValue().equals("INTEGER") && expression.get(2).getTypeValue().equals("INTEGER")) {
+                        throw new IllegalArgumentException("Not a valid syntax for Lisp: Operands for " + keyWord + " must be of type INTEGER.");
                     }
-                    break;
+                } else {
+                    throw new IllegalArgumentException("Not a valid syntax for Lisp: Incorrect number of parameters.");
+                }
+                break;
 
-                case "COMPARATOR":
-                    if (expression.get(2).getTypeValue().equals("INTEGER") && expression.get(3).getTypeValue().equals("INTEGER")) {
-                        result = true;
-                    } else {
-                        result = false;
+            case "LIST":
+                for (int i = 1; i <= expression.size()-1; i++){
+                    if (!expression.get(i).getTypeValue().equals("INTEGER")) {
+                        throw new IllegalArgumentException("Not a valid syntax for Lisp: Elements in LIST must be of type INTEGER.");
                     }
-                    break;
-                default:
-                    result = false;
-            }
-        }
+                }
+                break;
+            
+            case "COND":
+                // V
+                break;
+
+            case "ATOM":  
+                if (expression.size() > 2) {
+                    throw new IllegalArgumentException("Not a valid syntax for Lisp: Incorrect number of parameters.");
+                }
+                break;
         
-        return result;
+            default:
+                break;
+        }
     }
 }
