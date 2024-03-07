@@ -71,9 +71,10 @@ public class Validator {
                 String keyWord = expression.get(0).getTypeValue();
 
                 if (isQuote) {
-                   keyWord = "QUOTE";
-                } 
-
+                    expression.get(0).setTypeValue("QUOTE");
+                    keyWord = expression.get(0).getTypeValue();
+                }
+    
                 switch (keyWord) {
                     case "BOOLEAN":
                         if (expression.get(0).getValue().equals("true")) {
@@ -101,12 +102,13 @@ public class Validator {
                         executionStack.push(tokenize(interpreter.list(expression)));
                         break;
 
+                    case "ATOM":
+                        executionStack.push(tokenize(String.valueOf(interpreter.atom(expression))));
+                        break;
+
                     case "QUOTE":
                         executionStack.push(tokenize(String.valueOf(interpreter.quote(expression))));
                         break;
-
-                    case "ATOM":
-                        executionStack.push(tokenize(String.valueOf(interpreter.atom(expression))));
 
                     default:
                         break;
@@ -143,7 +145,8 @@ public class Validator {
                         isQuote = true;
                     }
 
-                }
+                    }
+                    
             }
         }
 
@@ -159,6 +162,7 @@ public class Validator {
         // Si el valor es una palabra reservada
         if (reservedWords.containsKey(value)) {
             return new Token(value, reservedWords.get(value));
+
         // Si el valor es un numero
         } else if (isInteger(value)) {
             return new Token(value, "INTEGER");
@@ -169,8 +173,10 @@ public class Validator {
         }else if(value.substring(0, 4).equals("list")){
             return new Token(value.substring(5), "LIST_ELEMENTS");
 
-        } else if (value.contains("(") && value.contains(")")) {
-            return new Token(value, "QUOTED_EXPRESSION");
+        } else if (value.charAt(0) == '\'') {
+            value = value.replace("\'", "");
+            value = value.replace("quote ", "");
+            return new Token(value, "STRING");
         }
         
         throw new IllegalArgumentException("Valor inválido");

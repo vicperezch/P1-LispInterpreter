@@ -111,7 +111,9 @@ public class Interpreter {
         for (Token token : expression) {
             atoms.add(token.getValue());
         }
-        return "(" + String.join(" ", atoms) + ")";
+        String quotedExpression = String.join(" ", atoms);
+
+        return "'(" + quotedExpression + ")";
     }
 
     /**
