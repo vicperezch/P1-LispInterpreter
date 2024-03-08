@@ -16,6 +16,7 @@ public class Validator {
     private HashMap<String, String> keyWords;
     private boolean isQuoteExpression;
     private boolean isCondExpression;
+    private HashMap<String, Token> globalVariables;
 
     /**
      * @description Constructor de clase
@@ -42,9 +43,11 @@ public class Validator {
             put("list", "LIST");
             put("quote", "QUOTE");
             put("atom", "ATOM");
+            put("setq", "SETQ");
         }};
         this.isCondExpression = false;
         this.isQuoteExpression = false;
+        this.globalVariables = Interpreter.globalVariables;
     }
 
     /**
@@ -120,6 +123,10 @@ public class Validator {
                         executionStack.push(tokenize(String.valueOf(interpreter.quote(expression))));
                         break;
 
+                    case "SETQ":
+                        interpreter.setq(expression);
+                        break;
+
                     default:
                         break;
                 }
@@ -139,20 +146,36 @@ public class Validator {
                     String keyword = "";
 
                     while (i < code.length() && c != ' ' && !delimiters.contains(String.valueOf(code.charAt(i)))) {
-                        keyword += code.charAt(i);
+                        c = code.charAt(i);
+                        keyword += c;
                         i++;
                     }
-            
-                    if (!keyword.isEmpty()) {
-                        executionStack.push(tokenize(keyword));
+                    i--;
+
+                    if (isKeyword(keyword)) {
+                        if (!keyword.isEmpty()) {
+                            executionStack.push(tokenize(keyword));
+                        }
+    
+                        if (keyword.equals("quote")) {
+                            isQuoteExpression = true;
+    
+                        } else if (keyword.equals("cond")) {
+                            isCondExpression = true;
+                        }
+
+                    } else {
+                        String variableName = keyword;
+
+                        if (!globalVariables.containsKey(variableName)) {
+                            executionStack.push(tokenize(variableName));
+
+                        } else {
+                            executionStack.push(globalVariables.get(variableName));
+                        }
+                        
                     }
 
-                    if (keyword.equals("quote")) {
-                        isQuoteExpression = true;
-
-                    } else if (keyword.equals("cond")) {
-                        isCondExpression = true;
-                    }
                 }    
             }
         }
@@ -180,13 +203,22 @@ public class Validator {
         } else if (value.equals("false")) {
             return new Token("NIL", "BOOLEAN");
 
-        } else if (value.substring(0, 4).equals("list")) {
-            return new Token(value.substring(5), "LIST_ELEMENTS");
-
-        } else if (value.charAt(0) == '\'') {
+        }  else if (value.charAt(0) == '\'') {
             value = value.replace("\'", "");
             value = value.replace("quote ", "");
             return new Token(value, "STRING");
+
+        } else if (value.startsWith("\"") && value.endsWith("\"")) {
+            return new Token(value, "STRING");
+
+        } else if (globalVariables.containsKey(value)) {
+            return new Token(globalVariables.get(value).getValue(), globalVariables.get(value).getTypeValue());
+
+        } else if (!keyWords.containsKey(value)){
+            return new Token(value, "VARIABLE_NAME");
+
+        } else if (value.substring(0, 4).equals("list")) {
+            return new Token(value.substring(5), "LIST_ELEMENTS");
         }
         
         throw new IllegalArgumentException("Valor inválido");
@@ -220,6 +252,7 @@ public class Validator {
         switch (keyWord) {
             case "OPERATOR":
             case "COMPARATOR":
+            case "SETQ": break;
             case "EQUAL":
                 if (expression.size() == 3) {
                     if (!expression.get(1).getTypeValue().equals("INTEGER") && expression.get(2).getTypeValue().equals("INTEGER")) {
@@ -264,9 +297,17 @@ public class Validator {
                     throw new IllegalArgumentException("Not a valid syntax for Lisp: Incorrect number of parameters.");
                 }
                 break;
-        
             default:
                 throw new IllegalArgumentException("Invalid syntax: " + value + " is not a valid keyword for Lisp.");
         }
+    }
+
+    public boolean isKeyword(String str) {
+        for (String keyword : keyWords.keySet()) {
+            if (str.equals(keyword)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -1,6 +1,7 @@
 package src;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * @author Victor Pérez
@@ -9,6 +10,7 @@ import java.util.ArrayList;
  * @version 1.0
  */
 public class Interpreter {
+    public static HashMap<String, Token> globalVariables = new HashMap<>();
 
     /**
      * @description Constructor de clase
@@ -145,5 +147,10 @@ public class Interpreter {
             }
         }
         return false;
+    }
+
+    public String setq(ArrayList<Token> expression) {
+        globalVariables.put(expression.get(1).getValue(), new Token(String.valueOf(expression.get(2).getValue()), expression.get(2).getTypeValue()));
+        return expression.get(1).getValue();
     }
 }
