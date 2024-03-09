@@ -48,6 +48,7 @@ public class Validator {
             put("setq", "SETQ");
             put("defun", "DEFUN");
         }};
+        this.functions = new HashMap<>();
         this.isCondExpression = false;
         this.isQuoteExpression = false;
         this.isFunction = false;
@@ -72,12 +73,23 @@ public class Validator {
                 executionStack.push(tokenize(String.valueOf(c)));
 
             } else if(c == ')') {
-                while (!executionStack.peek().getValue().equals("(")) {
+                int closingParenthesis = 1;
+                int openingParenthesis = 0;
+
+                // Llena la expresión con los tokens de la pila hasta que coinciden todos los paréntesis
+                while (closingParenthesis != openingParenthesis) {
+                    if (executionStack.peek().getValue().equals("(")) {
+                        openingParenthesis++;
+
+                    } else if (executionStack.peek().getValue().equals(")")) {
+                        closingParenthesis++;
+                    }
+
                     expression.add(0, executionStack.pop());
                 }
         
-                executionStack.pop();
-
+                // Elimina el paréntesis de apertura
+                expression.remove(0);
                 String keyWord = expression.get(0).getTypeValue();
 
                 if (isQuoteExpression) {
@@ -87,59 +99,17 @@ public class Validator {
 
                 validateExpressionSyntax(expression);
     
+                // Si la expresión no está dentro de una definición de función
                 if (!isFunction) {
-                    switch (keyWord) {
-                        case "BOOLEAN":
-                            if (expression.get(0).getValue().equals("T") && isCondExpression) {
-                                executionStack.push(expression.get(0));
-                                executionStack.push(expression.get(1));
-                            }
-                            break;
-
-                        case "OPERATOR":
-                            executionStack.push(tokenize(String.valueOf(interpreter.calculateArithmetic(expression))));
-                            break;
-
-                        case "COMPARATOR":
-                            executionStack.push(tokenize(String.valueOf(interpreter.compare(expression))));
-                            break;
-
-                        case "EQUAL":
-                            executionStack.push(tokenize(String.valueOf(interpreter.compare(expression))));
-                            break;
-                        
-                        case "COND":
-                            String result = interpreter.cond(expression);
-                            if (result != null) {
-                                executionStack.push(tokenize(result));
-                            }
-
-                            isCondExpression = false;
-                            break;
-                        
-                        case "LIST":
-                            executionStack.push(tokenize(interpreter.list(expression)));
-                            break;
-
-                        case "ATOM":
-                            executionStack.push(tokenize(String.valueOf(interpreter.atom(expression))));
-                            break;
-
-                        case "QUOTE":
-                            executionStack.push(tokenize(String.valueOf(interpreter.quote(expression))));
-                            break;
-
-                        case "SETQ":
-                            interpreter.setq(expression);
-                            break;
-
-                        default:
-                            break;
-                    }
+                    executeExpression(keyWord, expression);
 
                 } else {
                     if (keyWord.equals("DEFUN")) {
-                        // func
+                        Function function = interpreter.defun(expression);
+                        functions.put(function.getName(), function);
+
+                        isFunction = false;
+
                     } else {
                         returnExpressionToStack(expression);
                     }
@@ -196,6 +166,7 @@ public class Validator {
         return executionStack.pop();
     }
 
+
     /**
      * Convierte un valor a un token
      * @param value Valor a tokenizar
@@ -239,6 +210,63 @@ public class Validator {
 
 
     /**
+     * @description Método que se encarga de ejecutar las expresiones a través del intérprete
+     * @param keyword Comando de la expresión
+     * @param expression Expresión a ejecutar
+     */
+    public void executeExpression(String keyword, ArrayList<Token> expression) {
+        switch (keyword) {
+            case "BOOLEAN":
+                if (expression.get(0).getValue().equals("T")) {
+                    executionStack.push(expression.get(0));
+                    executionStack.push(expression.get(1));
+                }
+                break;
+
+            case "OPERATOR":
+                executionStack.push(tokenize(String.valueOf(interpreter.calculateArithmetic(expression))));
+                break;
+
+            case "COMPARATOR":
+                executionStack.push(tokenize(String.valueOf(interpreter.compare(expression))));
+                break;
+
+            case "EQUAL":
+                executionStack.push(tokenize(String.valueOf(interpreter.compare(expression))));
+                break;
+            
+            case "COND":
+                String result = interpreter.cond(expression);
+                if (result != null) {
+                    executionStack.push(tokenize(result));
+                }
+
+                isCondExpression = false;
+                break;
+            
+            case "LIST":
+                executionStack.push(tokenize(interpreter.list(expression)));
+                break;
+
+            case "ATOM":
+                executionStack.push(tokenize(String.valueOf(interpreter.atom(expression))));
+                break;
+
+            case "QUOTE":
+                executionStack.push(tokenize(String.valueOf(interpreter.quote(expression))));
+                break;
+
+            case "SETQ":
+                interpreter.setq(expression);
+                break;
+
+            default:
+                break;
+        }
+    }
+
+
+    /**
      * @description Método que se encarga de validar la estructura de las expresiones
      * @param expression Expresión a validar
      */
@@ -246,65 +274,74 @@ public class Validator {
         String keyWord = expression.get(0).getTypeValue();
         String value = expression.get(0).getValue();
 
-        switch (keyWord) {
-            case "OPERATOR":
-            case "COMPARATOR":
-            case "SETQ": break;
-            case "EQUAL":
-                if (expression.size() == 3) {
-                    if (!expression.get(1).getTypeValue().equals("INTEGER") && expression.get(2).getTypeValue().equals("INTEGER")) {
-                        throw new IllegalArgumentException("Not a valid syntax for Lisp: Operands for " + keyWord + " must be of type INTEGER.");
+        // Realiza las validaciones si la expresión no está dentro de la definición de una función
+        if (!isFunction) {
+            switch (keyWord) {
+                case "SETQ": 
+                    break;
+
+                case "OPERATOR":
+                case "COMPARATOR":
+                case "EQUAL":
+                    if (expression.size() == 3) {
+                        if (!expression.get(1).getTypeValue().equals("INTEGER") && expression.get(2).getTypeValue().equals("INTEGER")) {
+                            throw new IllegalArgumentException("Not a valid syntax for Lisp: Operands for " + keyWord + " must be of type INTEGER.");
+                        }
+                    } else {
+                        throw new IllegalArgumentException("Not a valid syntax for Lisp: Incorrect number of parameters.");
                     }
-                } else {
-                    throw new IllegalArgumentException("Not a valid syntax for Lisp: Incorrect number of parameters.");
-                }
-                break;
+                    break;
 
-            case "LIST":
-                for (int i = 1; i <= expression.size() - 1; i++){
-                    if (!expression.get(i).getTypeValue().equals("INTEGER")) {
-                        throw new IllegalArgumentException("Not a valid syntax for Lisp: Elements in LIST must be of type INTEGER.");
+                case "LIST":
+                    for (int i = 1; i <= expression.size() - 1; i++){
+                        if (!expression.get(i).getTypeValue().equals("INTEGER")) {
+                            throw new IllegalArgumentException("Not a valid syntax for Lisp: Elements in LIST must be of type INTEGER.");
+                        }
                     }
-                }
-                break;
-            
-            case "BOOLEAN":
-                if (!isCondExpression) {
-                    throw new IllegalArgumentException("Not a valid syntax for Lisp: BOOLEAN must be inside a COND expression.");
-                }
+                    break;
+                
+                case "BOOLEAN":
+                    if (!isCondExpression) {
+                        throw new IllegalArgumentException("Not a valid syntax for Lisp: BOOLEAN must be inside a COND expression.");
+                    }
 
-                if (expression.size() > 2) {
-                    throw new IllegalArgumentException("Not a valid syntax for Lisp: Incorrect number of parameters in COND expression.");
-                }
-                break;
+                    if (expression.size() > 2) {
+                        throw new IllegalArgumentException("Not a valid syntax for Lisp: Incorrect number of parameters in COND expression.");
+                    }
+                    break;
 
-            case "COND":
-                String exp = "";
-                for (Token token : expression) {
-                    exp += token.getTypeValue() + " ";
-                }
+                case "COND":
+                    String exp = "";
+                    for (Token token : expression) {
+                        exp += token.getTypeValue() + " ";
+                    }
 
-                if (!exp.matches("^\\s*COND(?:\\s+BOOLEAN\\s+\\w+\\s*)+\\s*")) {
-                    throw new IllegalArgumentException("Not a valid syntax for Lisp: Incorrect COND expression.");
-                }
-                break;
+                    if (!exp.matches("^\\s*COND(?:\\s+BOOLEAN\\s+\\w+\\s*)+\\s*")) {
+                        throw new IllegalArgumentException("Not a valid syntax for Lisp: Incorrect COND expression.");
+                    }
+                    break;
 
-            case "ATOM":  
-                if (expression.size() > 2) {
-                    throw new IllegalArgumentException("Not a valid syntax for Lisp: Incorrect number of parameters.");
-                }
-                break;
+                case "ATOM":  
+                    if (expression.size() > 2) {
+                        throw new IllegalArgumentException("Not a valid syntax for Lisp: Incorrect number of parameters.");
+                    }
+                    break;
 
-            case "VARIABLE_NAME":
-                if (!isFunction) {
+                case "VARIABLE_NAME":
+                    if (!isFunction) {
+                        throw new IllegalArgumentException("Invalid syntax: " + value + " is not a valid keyword for Lisp.");
+                    }
+                    break;
+                
+                case "DEFUN":
+                    break;
+
+                default:
                     throw new IllegalArgumentException("Invalid syntax: " + value + " is not a valid keyword for Lisp.");
-                }
-                break;
-
-            default:
-                throw new IllegalArgumentException("Invalid syntax: " + value + " is not a valid keyword for Lisp.");
+            }
         }
     }
+
 
     /**
      * @description Método que se encarga de devolver una expresión a la pila de ejecución
@@ -312,9 +349,11 @@ public class Validator {
      */
     public void returnExpressionToStack(ArrayList<Token> expression){
         executionStack.push(tokenize("("));
+        
         for (Token token : expression) {
             executionStack.push(token);
         }
+
         executionStack.push(tokenize(")"));
     }
 

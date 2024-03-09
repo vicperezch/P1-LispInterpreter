@@ -64,7 +64,7 @@ public class ValidatorTest {
         String instruccion = "(list 1 2 3 4 5 6)";
         Validator validator = new Validator();
 
-        Assert.assertEquals("1 2 3 4 5 6", validator.fillStack(instruccion).getValue());
+        Assert.assertEquals("list 1 2 3 4 5 6", validator.fillStack(instruccion).getValue());
     }
 
     @Test

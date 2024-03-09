@@ -9,8 +9,5 @@ package src;
 
 public class Main {
     public static void main(String[] args) {
-        Validator val = new Validator();
-
-        System.out.println(val.fillStack("(defun (a) (+ 1 2))").getValue());
     }
 }
