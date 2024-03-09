@@ -14,9 +14,11 @@ public class Validator {
     private Stack<Token> executionStack;
     private Interpreter interpreter;
     private HashMap<String, String> keyWords;
+    private HashMap<String, Token> globalVariables;
+    private HashMap<String, Function> functions;
     private boolean isQuoteExpression;
     private boolean isCondExpression;
-    private HashMap<String, Token> globalVariables;
+    private boolean isFunction;
 
     /**
      * @description Constructor de clase
@@ -44,11 +46,14 @@ public class Validator {
             put("quote", "QUOTE");
             put("atom", "ATOM");
             put("setq", "SETQ");
+            put("defun", "DEFUN");
         }};
         this.isCondExpression = false;
         this.isQuoteExpression = false;
+        this.isFunction = false;
         this.globalVariables = Interpreter.globalVariables;
     }
+
 
     /**
      * @description Método que se encarga de llenar la pila y validar las expresiones
@@ -82,54 +87,63 @@ public class Validator {
 
                 validateExpressionSyntax(expression);
     
-                switch (keyWord) {
-                    case "BOOLEAN":
-                        if (expression.get(0).getValue().equals("T") && isCondExpression) {
-                            executionStack.push(expression.get(0));
-                            executionStack.push(expression.get(1));
-                        }
-                        break;
+                if (!isFunction) {
+                    switch (keyWord) {
+                        case "BOOLEAN":
+                            if (expression.get(0).getValue().equals("T") && isCondExpression) {
+                                executionStack.push(expression.get(0));
+                                executionStack.push(expression.get(1));
+                            }
+                            break;
 
-                    case "OPERATOR":
-                        executionStack.push(tokenize(String.valueOf(interpreter.calculateArithmetic(expression))));
-                        break;
+                        case "OPERATOR":
+                            executionStack.push(tokenize(String.valueOf(interpreter.calculateArithmetic(expression))));
+                            break;
 
-                    case "COMPARATOR":
-                        executionStack.push(tokenize(String.valueOf(interpreter.compare(expression))));
-                        break;
+                        case "COMPARATOR":
+                            executionStack.push(tokenize(String.valueOf(interpreter.compare(expression))));
+                            break;
 
-                    case "EQUAL":
-                        executionStack.push(tokenize(String.valueOf(interpreter.compare(expression))));
-                        break;
-                    
-                    case "COND":
-                        String result = interpreter.cond(expression);
-                        if (result != null) {
-                            executionStack.push(tokenize(result));
-                        }
+                        case "EQUAL":
+                            executionStack.push(tokenize(String.valueOf(interpreter.compare(expression))));
+                            break;
+                        
+                        case "COND":
+                            String result = interpreter.cond(expression);
+                            if (result != null) {
+                                executionStack.push(tokenize(result));
+                            }
 
-                        isCondExpression = false;
-                        break;
-                    
-                    case "LIST":
-                        executionStack.push(tokenize(interpreter.list(expression)));
-                        break;
+                            isCondExpression = false;
+                            break;
+                        
+                        case "LIST":
+                            executionStack.push(tokenize(interpreter.list(expression)));
+                            break;
 
-                    case "ATOM":
-                        executionStack.push(tokenize(String.valueOf(interpreter.atom(expression))));
-                        break;
+                        case "ATOM":
+                            executionStack.push(tokenize(String.valueOf(interpreter.atom(expression))));
+                            break;
 
-                    case "QUOTE":
-                        executionStack.push(tokenize(String.valueOf(interpreter.quote(expression))));
-                        break;
+                        case "QUOTE":
+                            executionStack.push(tokenize(String.valueOf(interpreter.quote(expression))));
+                            break;
 
-                    case "SETQ":
-                        interpreter.setq(expression);
-                        break;
+                        case "SETQ":
+                            interpreter.setq(expression);
+                            break;
 
-                    default:
-                        break;
-                }
+                        default:
+                            break;
+                    }
+
+                } else {
+                    if (keyWord.equals("DEFUN")) {
+                        // func
+                    } else {
+                        returnExpressionToStack(expression);
+                    }
+                }   
 
                 expression.clear();
 
@@ -152,16 +166,17 @@ public class Validator {
                     }
                     i--;
 
-                    if (isKeyword(keyword)) {
-                        if (!keyword.isEmpty()) {
-                            executionStack.push(tokenize(keyword));
-                        }
+                    if (keyWords.containsKey(keyword)) {
+                        executionStack.push(tokenize(keyword));
     
                         if (keyword.equals("quote")) {
                             isQuoteExpression = true;
     
                         } else if (keyword.equals("cond")) {
                             isCondExpression = true;
+
+                        } else if (keyword.equals("defun")) {
+                            isFunction = true;
                         }
 
                     } else {
@@ -173,9 +188,7 @@ public class Validator {
                         } else {
                             executionStack.push(globalVariables.get(variableName));
                         }
-                        
                     }
-
                 }    
             }
         }
@@ -203,7 +216,7 @@ public class Validator {
         } else if (value.equals("false")) {
             return new Token("NIL", "BOOLEAN");
 
-        }  else if (value.charAt(0) == '\'') {
+        } else if (value.charAt(0) == '\'') {
             value = value.replace("\'", "");
             value = value.replace("quote ", "");
             return new Token(value, "STRING");
@@ -222,22 +235,6 @@ public class Validator {
         }
         
         throw new IllegalArgumentException("Valor inválido");
-    }
-
-
-    /**
-     * @description Método que valida si un string es un número
-     * @param str String a validar
-     * @return True o false en función de si es un número
-     */
-    public boolean isInteger(String str) {
-        try {
-            Integer.parseInt(str);
-            return true;
-
-        } catch (NumberFormatException e) {
-            return false;
-        }
     }
 
 
@@ -297,17 +294,43 @@ public class Validator {
                     throw new IllegalArgumentException("Not a valid syntax for Lisp: Incorrect number of parameters.");
                 }
                 break;
+
+            case "VARIABLE_NAME":
+                if (!isFunction) {
+                    throw new IllegalArgumentException("Invalid syntax: " + value + " is not a valid keyword for Lisp.");
+                }
+                break;
+
             default:
                 throw new IllegalArgumentException("Invalid syntax: " + value + " is not a valid keyword for Lisp.");
         }
     }
 
-    public boolean isKeyword(String str) {
-        for (String keyword : keyWords.keySet()) {
-            if (str.equals(keyword)) {
-                return true;
-            }
+    /**
+     * @description Método que se encarga de devolver una expresión a la pila de ejecución
+     * @param expression Expresión a devolver
+     */
+    public void returnExpressionToStack(ArrayList<Token> expression){
+        executionStack.push(tokenize("("));
+        for (Token token : expression) {
+            executionStack.push(token);
         }
-        return false;
+        executionStack.push(tokenize(")"));
+    }
+
+
+    /**
+     * @description Método que valida si un string es un número
+     * @param str String a validar
+     * @return True o false en función de si es un número
+     */
+    public boolean isInteger(String str) {
+        try {
+            Integer.parseInt(str);
+            return true;
+
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 }
