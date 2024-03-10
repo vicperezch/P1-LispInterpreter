@@ -198,6 +198,9 @@ public class Validator {
         } else if (globalVariables.containsKey(value)) {
             return new Token(globalVariables.get(value).getValue(), globalVariables.get(value).getTypeValue());
 
+        } else if (functions.containsKey(value)){
+            return new Token(value, "FUNCTION_NAME");
+
         } else if (!keyWords.containsKey(value)){
             return new Token(value, "VARIABLE_NAME");
 
@@ -258,6 +261,14 @@ public class Validator {
 
             case "SETQ":
                 interpreter.setq(expression);
+                break;
+
+            case "FUNCTION_NAME":
+                String functionName = expression.get(0).getValue();
+                expression.remove(0);
+                if (functions.containsKey(functionName)){
+                    executeFunction(functionName, expression);
+                }
                 break;
 
             default:
@@ -336,6 +347,9 @@ public class Validator {
                 case "DEFUN":
                     break;
 
+                case "FUNCTION_NAME":
+                    break;
+
                 default:
                     throw new IllegalArgumentException("Invalid syntax: " + value + " is not a valid keyword for Lisp.");
             }
@@ -372,4 +386,40 @@ public class Validator {
             return false;
         }
     }
+
+    /**
+     * @description Método que ejecuta una función definida por el usuario
+     * @param functionName EL nombre de la función a ejecutar
+     * @param arguments Los valores con los que se ejecutará la función
+     */
+    public void executeFunction(String functionName, ArrayList<Token> arguments) {
+        if (functions.containsKey(functionName)) {
+            Function userFunction = functions.get(functionName);
+    
+            if (userFunction.getParameters().size() != arguments.size()) {
+                throw new IllegalArgumentException("Invalid number of arguments for function " + functionName);
+            }
+    
+            HashMap<String, Token> localVariables = new HashMap<>();
+    
+            for (int i = 0; i < userFunction.getParameters().size(); i++) {
+                String parameterName = userFunction.getParameters().get(i);
+                Token argumentValue = arguments.get(i);
+                localVariables.put(parameterName, argumentValue);
+            }
+    
+            globalVariables.putAll(localVariables);
+    
+            Token result = fillStack(userFunction.getBody());
+    
+            for (String parameterName : userFunction.getParameters()) {
+                globalVariables.remove(parameterName);
+            }
+    
+            executionStack.push(result);
+        } else {
+            throw new IllegalArgumentException("Undefined function: " + functionName);
+        }
+    }
+    
 }

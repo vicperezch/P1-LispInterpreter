@@ -74,4 +74,23 @@ public class ValidatorTest {
 
         Assert.assertEquals("T", validator.fillStack(instruccion).getValue());
     }
+
+    @Test 
+    public void testSetq(){
+        String instruccion = "(setq x 1) (+ 10 x)";
+        Validator validator = new Validator();
+
+        Assert.assertEquals("11", validator.fillStack(instruccion).getValue());
+    }
+
+    @Test
+    public void testMultiplicationFunction() {
+        Validator validator = new Validator();
+        String functionDefinition = "(defun multiply (a b) (* a b))";
+        validator.fillStack(functionDefinition);
+        String functionCall = "(multiply 8 4)";
+        Token resultToken = validator.fillStack(functionCall);
+
+        Assert.assertEquals("32", resultToken.getValue());
+    }
 }
