@@ -110,7 +110,7 @@ public class Interpreter {
                 if (expression.get(i).getValue().equals("T")) {
                     return expression.get(i + 1).getValue();
                 }
-            }
+            } 
         }
 
         return null;

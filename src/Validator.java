@@ -19,6 +19,7 @@ public class Validator {
     private boolean isQuoteExpression;
     private boolean isCondExpression;
     private boolean isFunction;
+    private int counter;
 
     /**
      * @description Constructor de clase
@@ -53,6 +54,7 @@ public class Validator {
         this.isQuoteExpression = false;
         this.isFunction = false;
         this.globalVariables = Interpreter.globalVariables;
+        this.counter = 0;
         executionStack.push(new Token("#","#"));
     }
 
@@ -87,6 +89,7 @@ public class Validator {
                     expression.add(0, executionStack.pop());
                 }
         
+
                 // Elimina el paréntesis de apertura
                 expression.remove(0);
                 String keyWord = expression.get(0).getTypeValue();
@@ -143,6 +146,7 @@ public class Validator {
     
                         } else if (keyword.equals("cond") && !isFunction) {
                             isCondExpression = true;
+                            counter = 0;
 
                         } else if (keyword.equals("defun")) {
                             isFunction = true;
@@ -219,14 +223,17 @@ public class Validator {
     public void executeExpression(String keyword, ArrayList<Token> expression) {
         switch (keyword) {
             case "BOOLEAN":
-                if (expression.get(0).getValue().equals("T")) {
+                if (expression.get(0).getValue().equals("T") && counter == 0) {
                     executionStack.push(expression.get(0));
                     executionStack.push(expression.get(1));
+                    counter++;
                 }
                 break;
 
             case "OPERATOR":
-                executionStack.push(tokenize(String.valueOf(interpreter.calculateArithmetic(expression))));
+                if (!isCondExpression || counter == 0) {
+                    executionStack.push(tokenize(String.valueOf(interpreter.calculateArithmetic(expression))));
+                }
                 break;
 
             case "COMPARATOR":
@@ -242,7 +249,7 @@ public class Validator {
                 if (result != null) {
                     executionStack.push(tokenize(result));
                 }
-
+                counter = 0;
                 isCondExpression = false;
                 break;
             
@@ -263,10 +270,18 @@ public class Validator {
                 break;
 
             case "FUNCTION_NAME":
-                String functionName = expression.get(0).getValue();
-                expression.remove(0);
-                if (functions.containsKey(functionName)){
-                    executeFunction(functionName, expression);
+                if (!isCondExpression) {
+                    String functionName = expression.get(0).getValue();
+                    expression.remove(0);
+                    if (functions.containsKey(functionName)){
+                        executeFunction(functionName, expression);
+                    }
+                } else if (counter == 0) {
+                    String functionName = expression.get(0).getValue();
+                    expression.remove(0);
+                    if (functions.containsKey(functionName)){
+                        executeFunction(functionName, expression);
+                    }
                 }
                 break;
 
@@ -285,7 +300,7 @@ public class Validator {
         String value = expression.get(0).getValue();
 
         // Realiza las validaciones si la expresión no está dentro de la definición de una función
-        if (!isFunction) {
+        if (!isFunction && counter == 0) {
             switch (keyWord) {
                 case "SETQ": 
                     break;
@@ -311,10 +326,11 @@ public class Validator {
                     break;
                 
                 case "BOOLEAN":
+                /* 
                     if (!isCondExpression) {
                         throw new IllegalArgumentException("Not a valid syntax for Lisp: BOOLEAN must be inside a COND expression.");
                     }
-
+                    */
                     if (expression.size() > 2) {
                         throw new IllegalArgumentException("Not a valid syntax for Lisp: Incorrect number of parameters in COND expression.");
                     }
@@ -399,24 +415,26 @@ public class Validator {
                 throw new IllegalArgumentException("Invalid number of arguments for function " + functionName);
             }
     
+            // Asignación de variables
             HashMap<String, Token> localVariables = new HashMap<>();
-    
+            
             for (int i = 0; i < userFunction.getParameters().size(); i++) {
                 String parameterName = userFunction.getParameters().get(i);
                 Token argumentValue = arguments.get(i);
                 localVariables.put(parameterName, argumentValue);
             }
-    
-            /*Se cargan los parametros en la funcion*/
-            globalVariables.putAll(localVariables);
-            
-            /*Se ejecuta la funcion*/
-            Token result = fillStack(userFunction.getBody());
-    
-            /*Se retiran los valores de los parametros en la funcion*/
-            for (String parameterName : userFunction.getParameters()) {
-                globalVariables.remove(parameterName);
+        
+            String functionReplaced = "";
+            String originalBody = userFunction.getBody();
+            for (String key : localVariables.keySet()) {
+                if (functionReplaced.equals("")) {
+                    functionReplaced = originalBody.replace(key, localVariables.get(key).getValue());
+                } else {
+                    functionReplaced = functionReplaced.replace(key, localVariables.get(key).getValue());
+                }
+                
             }
+            Token result = fillStack(functionReplaced);
     
             executionStack.push(result);
         } else {
