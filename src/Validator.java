@@ -53,6 +53,7 @@ public class Validator {
         this.isQuoteExpression = false;
         this.isFunction = false;
         this.globalVariables = Interpreter.globalVariables;
+        executionStack.push(new Token("#","#"));
     }
 
 
@@ -64,12 +65,10 @@ public class Validator {
         String number = "";
         String delimiters = "( )";
         ArrayList<Token> expression = new ArrayList<>();
-
-        executionStack.push(new Token("#","#"));
         for (int i = 0; i < code.length(); i++) {
             char c = code.charAt(i);
 
-            if (c == '(') {
+             if (c == '(') {
                 executionStack.push(tokenize(String.valueOf(c)));
 
             } else if(c == ')') {
@@ -103,7 +102,7 @@ public class Validator {
                 if (!isFunction) {
                     executeExpression(keyWord, expression);
 
-                } else {
+                }else {
                     if (keyWord.equals("DEFUN")) {
                         Function function = interpreter.defun(expression);
                         functions.put(function.getName(), function);
@@ -142,7 +141,7 @@ public class Validator {
                         if (keyword.equals("quote")) {
                             isQuoteExpression = true;
     
-                        } else if (keyword.equals("cond")) {
+                        } else if (keyword.equals("cond") && !isFunction) {
                             isCondExpression = true;
 
                         } else if (keyword.equals("defun")) {
@@ -408,10 +407,13 @@ public class Validator {
                 localVariables.put(parameterName, argumentValue);
             }
     
+            /*Se cargan los parametros en la funcion*/
             globalVariables.putAll(localVariables);
-    
+            
+            /*Se ejecuta la funcion*/
             Token result = fillStack(userFunction.getBody());
     
+            /*Se retiran los valores de los parametros en la funcion*/
             for (String parameterName : userFunction.getParameters()) {
                 globalVariables.remove(parameterName);
             }

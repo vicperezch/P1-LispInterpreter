@@ -119,7 +119,7 @@ public class Interpreter {
 
     public String list(ArrayList<Token> expression){
         StringBuilder list = new StringBuilder();
-        for (int i = 0; i < expression.size(); i++) {
+        for (int i = 1; i < expression.size(); i++) {
             list.append(expression.get(i).getValue());
             if(i<expression.size() - 1) list.append(" ");
         } 

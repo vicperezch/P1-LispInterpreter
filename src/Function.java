@@ -1,6 +1,7 @@
 package src;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * @author Victor Pérez
@@ -11,6 +12,7 @@ public class Function {
     private String name;
     private String body;
     private ArrayList<String> parameters;
+    private HashMap<String, Token> localVariables;
 
     /**
      * @description Constructor de la clase
@@ -22,6 +24,7 @@ public class Function {
         this.name = name;
         this.body = body;
         this.parameters = parameters;
+        localVariables = null;
     }
 
     public String getName() {
@@ -47,4 +50,13 @@ public class Function {
     public void setParameters(ArrayList<String> parameters) {
         this.parameters = parameters;
     }
+
+    public HashMap<String, Token> getLocalVariables() {
+        return localVariables;
+    }
+
+    public void setLocalVariables(HashMap<String, Token> localVariables) {
+        this.localVariables = localVariables;
+    }
+
 }
