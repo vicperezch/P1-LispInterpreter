@@ -27,36 +27,67 @@ public class Function {
         localVariables = null;
     }
 
+    /**
+     * @description Obtiene el nombre de la función
+     * @return El nombre de la función
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Establece el nombre de la función
+     * @param name Nuevo nombre de la función
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * @description Obtiene el cuerpo de la función
+     * @return El cuerpo de la función
+     */
     public String getBody() {
         return body;
     }
 
+    /**
+     * @description Establece el cuerpo de la función
+     * @param body Nuevo cuerpo de la función
+     */
     public void setBody(String body) {
         this.body = body;
     }
 
+    /**
+     * @description Obtiene los parámetros de la función
+     * @return Los parámetros de la función
+     */
     public ArrayList<String> getParameters() {
         return parameters;
     }
 
+    /**
+     * @description Establece los parámetros de la función
+     * @param parameters Nueva lista de parámetros de la función
+     */
     public void setParameters(ArrayList<String> parameters) {
         this.parameters = parameters;
     }
 
+    /**
+     * @description Obtiene las variables locales de la función
+     * @return Las variables locales de la función
+     */
     public HashMap<String, Token> getLocalVariables() {
         return localVariables;
     }
 
+    /**
+     * @description Establece las variables locales de la función
+     * @param localVariables Nuevas variables locales de la función
+     */
     public void setLocalVariables(HashMap<String, Token> localVariables) {
         this.localVariables = localVariables;
     }
-
 }

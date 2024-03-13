@@ -2,6 +2,7 @@ package src;
 
 import java.util.ArrayList;
 import java.util.Stack;
+import java.util.regex.Pattern;
 import java.util.HashMap;
 
 /**
@@ -28,8 +29,8 @@ public class Validator {
         this.executionStack = new Stack<>();
         this.interpreter = new Interpreter();
         this.keyWords = new HashMap<>() {{
-            put("(", "PARENTHESIS");
-            put(")", "PARENTHESIS");
+            put("(", "PARENTHESES");
+            put(")", "PARENTHESES");
             put("+", "OPERATOR");
             put("-", "OPERATOR");
             put("*", "OPERATOR");
@@ -67,6 +68,9 @@ public class Validator {
         String number = "";
         String delimiters = "( )";
         ArrayList<Token> expression = new ArrayList<>();
+
+        correctNumberParentheses(code);
+
         for (int i = 0; i < code.length(); i++) {
             char c = code.charAt(i);
 
@@ -74,22 +78,21 @@ public class Validator {
                 executionStack.push(tokenize(String.valueOf(c)));
 
             } else if(c == ')') {
-                int closingParenthesis = 1;
-                int openingParenthesis = 0;
+                int closingParentheses = 1;
+                int openingParentheses = 0;
 
                 // Llena la expresión con los tokens de la pila hasta que coinciden todos los paréntesis
-                while (closingParenthesis != openingParenthesis) {
+                while (closingParentheses != openingParentheses) {
                     if (executionStack.peek().getValue().equals("(")) {
-                        openingParenthesis++;
+                        openingParentheses++;
 
                     } else if (executionStack.peek().getValue().equals(")")) {
-                        closingParenthesis++;
+                        closingParentheses++;
                     }
 
                     expression.add(0, executionStack.pop());
                 }
         
-
                 // Elimina el paréntesis de apertura
                 expression.remove(0);
                 String keyWord = expression.get(0).getTypeValue();
@@ -171,16 +174,35 @@ public class Validator {
 
 
     /**
+     * @description Método que verifica si el número de paréntesis de apertura y cierre es el mismo
+     * @param code La expresión a verificar
+     * @throws IllegalArgumentException Si el número de paréntesis de apertura y cierre no es el mismo
+     */
+    public void correctNumberParentheses(String code) {
+        int openParentheses = 0;
+        int closeParentheses = 0;
+        for (char c : code.toCharArray()) {
+            if (c == '(') {
+                openParentheses++;
+            } else if (c == ')') {
+                closeParentheses++;
+            }
+        }
+        if (openParentheses != closeParentheses) {
+            throw new IllegalArgumentException("Incorrect number of parentheses");
+        }
+    }
+
+
+    /**
      * Convierte un valor a un token
      * @param value Valor a tokenizar
      * @return Token
      */
     public Token tokenize(String value) {
-        // Si el valor es una palabra reservada
         if (keyWords.containsKey(value)) {
             return new Token(value, keyWords.get(value));
 
-        // Si el valor es un numero
         } else if (isInteger(value)) {
             return new Token(value, "INTEGER");
 
@@ -326,11 +348,6 @@ public class Validator {
                     break;
                 
                 case "BOOLEAN":
-                /* 
-                    if (!isCondExpression) {
-                        throw new IllegalArgumentException("Not a valid syntax for Lisp: BOOLEAN must be inside a COND expression.");
-                    }
-                    */
                     if (expression.size() > 2) {
                         throw new IllegalArgumentException("Not a valid syntax for Lisp: Incorrect number of parameters in COND expression.");
                     }
@@ -424,15 +441,9 @@ public class Validator {
                 localVariables.put(parameterName, argumentValue);
             }
         
-            String functionReplaced = "";
-            String originalBody = userFunction.getBody();
+            String functionReplaced = userFunction.getBody();
             for (String key : localVariables.keySet()) {
-                if (functionReplaced.equals("")) {
-                    functionReplaced = originalBody.replace(key, localVariables.get(key).getValue());
-                } else {
-                    functionReplaced = functionReplaced.replace(key, localVariables.get(key).getValue());
-                }
-                
+                functionReplaced = functionReplaced.replaceAll("\\b" + Pattern.quote(key) + "\\b", localVariables.get(key).getValue());
             }
             Token result = fillStack(functionReplaced);
     
@@ -441,5 +452,4 @@ public class Validator {
             throw new IllegalArgumentException("Undefined function: " + functionName);
         }
     }
-    
 }

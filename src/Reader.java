@@ -11,7 +11,6 @@ import java.io.IOException;
  * @description Clase que se encarga de leer el archivo de texto que contiene el código a interpretar
  * @version 1.0
  */
-
 public class Reader {
     private File fileCode;
 
@@ -26,7 +25,7 @@ public class Reader {
      * @Description: Método que se encarga de leer el archivo de texto que contiene el código a interpretar
      * @return: String con el contenido del archivo
      */
-    public String readFile() {
+    public String readFile() throws IOException {
         String code = "";
         try {
             BufferedReader br = new BufferedReader(new FileReader(fileCode));
@@ -40,11 +39,11 @@ public class Reader {
             code = sb.toString();
             br.close();
 
-        } catch (FileNotFoundException e) {
-            System.out.println("El archivo no fue encontrado");
-
+        }  catch (FileNotFoundException e) {
+            throw new FileNotFoundException("El archivo no fue encontrado: " + e.getMessage());
+            
         } catch (IOException e) {
-            System.out.println("Error al leer el archivo");
+            throw new IOException("Error al leer el archivo: " + e.getMessage());
         }
 
         return code;

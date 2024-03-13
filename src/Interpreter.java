@@ -2,6 +2,8 @@ package src;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Arrays;
 
 /**
  * @author Victor Pérez
@@ -12,14 +14,12 @@ import java.util.HashMap;
 public class Interpreter {
     public static HashMap<String, Token> globalVariables = new HashMap<>();
 
-    
     /**
      * @description Constructor de clase
      * @param validator Clase encargada de validar las expresiones
      */
     public Interpreter() {
     }
-
 
     /**
      * @description Método que se encarga de realizar operaciones aritméticas
@@ -49,7 +49,6 @@ public class Interpreter {
                 throw new IllegalArgumentException("Not a valid operator for Lisp");
         }
     }
-
 
     /**
      * @description Método que se encarga de comparar dos valores
@@ -98,7 +97,6 @@ public class Interpreter {
         }
     }
 
-
     /**
      * @description Método que se encarga de realizar la operación de condicional
      * @param expression Expresión a evaluar
@@ -116,7 +114,11 @@ public class Interpreter {
         return null;
     }
 
-
+    /**
+     * @description Método que genera una lista de elementos a partir de una expresión
+     * @param expression Expresión que contiene los elementos de la lista
+     * @return Lista generada
+     */
     public String list(ArrayList<Token> expression){
         StringBuilder list = new StringBuilder();
         for (int i = 1; i < expression.size(); i++) {
@@ -126,7 +128,11 @@ public class Interpreter {
         return list.toString(); 
     }
 
-
+    /**
+     * @description Método que devuelve la expresión com ouna lista quote
+     * @param expression Expresión que se hará quote
+     * @return Expresión quote
+     */
     public String quote(ArrayList<Token> expression) {
         ArrayList<String> atoms = new ArrayList<String>();
         for (Token token : expression) {
@@ -136,7 +142,6 @@ public class Interpreter {
 
         return "'(" + quotedExpression + ")";
     }
-
 
     /**
      * @description Método que verifica si la expression es un Atom
@@ -156,12 +161,15 @@ public class Interpreter {
         return false;
     }
 
-
+    /**
+     * @description Método que realiza el setq
+     * @param expression Expresión setq a evaluar
+     * @return Nombre de la variable
+     */
     public String setq(ArrayList<Token> expression) {
         globalVariables.put(expression.get(1).getValue(), new Token(String.valueOf(expression.get(2).getValue()), expression.get(2).getTypeValue()));
         return expression.get(1).getValue();
     }
-
 
     /**
      * Crea una instancia de la clase función con toda la información necesaria
@@ -171,6 +179,7 @@ public class Interpreter {
     public Function defun(ArrayList<Token> expression) {
         String name = expression.get(1).getValue();
         ArrayList<String> parameters = new ArrayList<>();
+        List<String> acceptedTokens = new ArrayList<>(Arrays.asList("DEFUN", "FUNCTION_NAME", "PARENTHESES", "VARIABLE_NAME"));
         
         // Agrega todos los token VARIABLE_NAME antes del primer paréntesis de cierre
         Token current;
@@ -178,6 +187,8 @@ public class Interpreter {
         while (!(current = expression.get(count)).getValue().equals(")")) {
             if (current.getTypeValue().equals("VARIABLE_NAME")) {
                 parameters.add(current.getValue());
+            } else if (!acceptedTokens.contains(current.getTypeValue())){
+                throw new IllegalArgumentException("Invalid variable name");
             }
 
             count++;

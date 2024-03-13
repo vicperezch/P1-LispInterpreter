@@ -6,7 +6,6 @@ package src;
  * @description Clase que modela un Token
  * @version 1.0
  */
-
 public class Token {
     private String value;
     private String typeValue;
@@ -51,7 +50,4 @@ public class Token {
     public void setTypeValue(String typeValue) {
         this.typeValue = typeValue;
     }
-
-    
-
 }

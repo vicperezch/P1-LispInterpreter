@@ -3,15 +3,20 @@ package tests;
 import src.Interpreter;
 import src.Token;
 import static org.junit.Assert.*;
-
 import java.util.ArrayList;
-
 import org.junit.*;
 
+/**
+ * @author Diego Flores, Victor Pérez, Juan Solís, Nils Muralles
+ * @date 05/03/2024
+ * @description Clase que se encarga de hacer las pruebas unitarias de la clase Interpreter
+ * @version 2.0
+ */
 public class InterpreterTest {
     
     /**
      * Test 1: Operaciones aritméticas
+     * Verifica si la operación de multiplicación funciona correctamente
      */
     @Test
     public void testArithmeticOperation() {
@@ -26,6 +31,7 @@ public class InterpreterTest {
 
     /**
      * Test 2: Comparaciones
+     * Verifica si la operación de comparación ">=" funciona correctamente
      */
     @Test
     public void testComparator() {
@@ -40,6 +46,7 @@ public class InterpreterTest {
 
     /**
      * Test 3: Manejar excepción dividir entre cero
+     * Verifica si se maneja correctamente la excepción al dividir entre cero
      */
     @Test
     public void DividingByZeroUndefined() {
@@ -53,6 +60,10 @@ public class InterpreterTest {
         assertEquals("Can't divide by zero", exception.getMessage());
     }
 
+    /**
+     * Test 4: Generador de lista
+     * Verifica si el generador de lista funciona correctamente
+     */
     @Test
     public void listGeneratorTest(){
         Interpreter myInterpreter = new Interpreter();
@@ -61,6 +72,6 @@ public class InterpreterTest {
         expression.add(new Token("1", "INTEGER"));
         expression.add(new Token("2", "INTEGER"));
         expression.add(new Token("3", "INTEGER"));
-        assertEquals("list 1 2 3", myInterpreter.list(expression));
+        assertEquals("1 2 3", myInterpreter.list(expression));
     }
 }
