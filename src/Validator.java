@@ -100,10 +100,6 @@ public class Validator {
                 expression.remove(0);
 
                 if (expression.size() > 0) {
-                    for (Token tok: expression) {
-                        System.out.println(tok.getValue());
-                    }
-                    System.out.println("----");
                     String keyWord = expression.get(0).getTypeValue();
 
                     if (isQuoteExpression) {

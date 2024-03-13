@@ -123,7 +123,7 @@ public class Interpreter {
         StringBuilder list = new StringBuilder();
         for (int i = 1; i < expression.size(); i++) {
             list.append(expression.get(i).getValue());
-            if(i<expression.size() - 1) list.append(" ");
+            if (i < expression.size() - 1) list.append(" ");
         } 
         return list.toString(); 
     }
@@ -152,12 +152,15 @@ public class Interpreter {
         if (expression.size() == 2) {
             if (expression.get(1).getTypeValue().equals("LIST_ELEMENTS")){
                 return false;
+
             } else if (expression.get(1).getTypeValue().equals("INTEGER") || expression.get(1).getTypeValue().equals("STRING") || expression.get(1).getTypeValue().equals("OPERATOR")){
                 return true;
+
             } else {
                 throw new IllegalArgumentException("Not a valid Atom for Lisp");
             }
         }
+
         return false;
     }
 
@@ -184,7 +187,6 @@ public class Interpreter {
         // Agrega todos los token VARIABLE_NAME antes del primer paréntesis de cierre
         Token current;
         int count = 0;
-        System.out.println(hasParameters);
         if (hasParameters) {
             while (!(current = expression.get(count)).getValue().equals(")")) {
                 if (current.getTypeValue().equals("VARIABLE_NAME")) {
@@ -211,8 +213,6 @@ public class Interpreter {
         for (int j = count + 1; j < expression.size(); j++) {
             body.append(expression.get(j).getValue() + " ");
         }
-
-        System.out.println(body.toString());
 
         return new Function(name, parameters, body.toString());
     }
