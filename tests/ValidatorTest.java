@@ -1,7 +1,9 @@
 package tests;
 
 import org.junit.Test;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Assert;
 import src.Token;
 import src.Validator;
@@ -142,5 +144,15 @@ public class ValidatorTest {
     public void testFactorialFunction() {
         Validator validator = new Validator();
         Assert.assertEquals("24", validator.fillStack("(defun factorial (x) (cond ((equal x 0) 1) (t (* x (factorial (- x 1)))))) (factorial 4)").getValue());
+    }
+
+    /**
+     * Test 12: Función sin parámetros definida por el usuario en fillStack
+     * Verifica si una función sin parámetros se evalúa correctamente en fillStack
+     */
+    @Test
+    public void testFunctionWithoutParameters() {
+        Validator validator = new Validator();
+        Assert.assertEquals("T", validator.fillStack("(defun bool () (atom 4)) (bool)").getValue());
     }
 }

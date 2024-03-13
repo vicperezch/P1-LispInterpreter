@@ -21,6 +21,7 @@ public class Validator {
     private boolean isCondExpression;
     private boolean isFunction;
     private int counter;
+    private boolean hasParameters;
 
     /**
      * @description Constructor de clase
@@ -56,6 +57,8 @@ public class Validator {
         this.isFunction = false;
         this.globalVariables = Interpreter.globalVariables;
         this.counter = 0;
+        this.hasParameters = false;
+
         executionStack.push(new Token("#","#"));
     }
 
@@ -77,7 +80,7 @@ public class Validator {
              if (c == '(') {
                 executionStack.push(tokenize(String.valueOf(c)));
 
-            } else if(c == ')') {
+            } else if (c == ')') {
                 int closingParentheses = 1;
                 int openingParentheses = 0;
 
@@ -95,32 +98,44 @@ public class Validator {
         
                 // Elimina el paréntesis de apertura
                 expression.remove(0);
-                String keyWord = expression.get(0).getTypeValue();
 
-                if (isQuoteExpression) {
-                    expression.get(0).setTypeValue("QUOTE");
-                    keyWord = expression.get(0).getTypeValue();
-                }
+                if (expression.size() > 0) {
+                    for (Token tok: expression) {
+                        System.out.println(tok.getValue());
+                    }
+                    System.out.println("----");
+                    String keyWord = expression.get(0).getTypeValue();
 
-                validateExpressionSyntax(expression);
-    
-                // Si la expresión no está dentro de una definición de función
-                if (!isFunction) {
-                    executeExpression(keyWord, expression);
+                    if (isQuoteExpression) {
+                        expression.get(0).setTypeValue("QUOTE");
+                        keyWord = expression.get(0).getTypeValue();
+                    }
 
-                }else {
-                    if (keyWord.equals("DEFUN")) {
-                        Function function = interpreter.defun(expression);
+                    validateExpressionSyntax(expression);
+        
+                    // Si la expresión no está dentro de una definición de función
+                    if (!isFunction) {
+                        executeExpression(keyWord, expression);
+
+                    } else if (keyWord.equals("DEFUN")) {
+                        Function function = interpreter.defun(expression, hasParameters);
                         functions.put(function.getName(), function);
 
                         isFunction = false;
 
                     } else {
-                        returnExpressionToStack(expression);
-                    }
-                }   
+                        if (keyWord.equals("VARIABLE_NAME")) {
+                            hasParameters = true;
+                        }
 
-                expression.clear();
+                        returnExpressionToStack(expression);
+                    }  
+
+                    expression.clear();
+
+                } else {
+                    hasParameters = false;
+                }
 
             } else if (c != ' ') {
                 if (isInteger(String.valueOf(c))) {
@@ -165,7 +180,7 @@ public class Validator {
                             executionStack.push(globalVariables.get(variableName));
                         }
                     }
-                }    
+                }
             }
         }
 
@@ -331,7 +346,7 @@ public class Validator {
                 case "COMPARATOR":
                 case "EQUAL":
                     if (expression.size() == 3) {
-                        if (!expression.get(1).getTypeValue().equals("INTEGER") && expression.get(2).getTypeValue().equals("INTEGER")) {
+                        if (!expression.get(1).getTypeValue().equals("INTEGER") || !expression.get(2).getTypeValue().equals("INTEGER")) {
                             throw new IllegalArgumentException("Not a valid syntax for Lisp: Operands for " + keyWord + " must be of type INTEGER.");
                         }
                     } else {
@@ -445,6 +460,7 @@ public class Validator {
             for (String key : localVariables.keySet()) {
                 functionReplaced = functionReplaced.replaceAll("\\b" + Pattern.quote(key) + "\\b", localVariables.get(key).getValue());
             }
+
             Token result = fillStack(functionReplaced);
     
             executionStack.push(result);

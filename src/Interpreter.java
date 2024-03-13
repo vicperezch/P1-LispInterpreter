@@ -176,7 +176,7 @@ public class Interpreter {
      * @param expression Expresión DEFUN a evaluar
      * @return Función creada
      */
-    public Function defun(ArrayList<Token> expression) {
+    public Function defun(ArrayList<Token> expression, boolean hasParameters) {
         String name = expression.get(1).getValue();
         ArrayList<String> parameters = new ArrayList<>();
         List<String> acceptedTokens = new ArrayList<>(Arrays.asList("DEFUN", "FUNCTION_NAME", "PARENTHESES", "VARIABLE_NAME"));
@@ -184,24 +184,35 @@ public class Interpreter {
         // Agrega todos los token VARIABLE_NAME antes del primer paréntesis de cierre
         Token current;
         int count = 0;
-        while (!(current = expression.get(count)).getValue().equals(")")) {
-            if (current.getTypeValue().equals("VARIABLE_NAME")) {
-                parameters.add(current.getValue());
-            } else if (!acceptedTokens.contains(current.getTypeValue())){
-                throw new IllegalArgumentException("Invalid variable name");
+        System.out.println(hasParameters);
+        if (hasParameters) {
+            while (!(current = expression.get(count)).getValue().equals(")")) {
+                if (current.getTypeValue().equals("VARIABLE_NAME")) {
+                    parameters.add(current.getValue());
+                    
+                } else if (!acceptedTokens.contains(current.getTypeValue())){
+                    throw new IllegalArgumentException("Invalid variable name");
+                }
+
+                count++;
             }
 
-            count++;
-        }
+            // Elimina el nombre de la función de la lista
+            parameters.remove(0);
 
-        // Elimina el nombre de la función de la lista
-        parameters.remove(0);
+        } else {
+
+            // Elimina la palabra reservada DEFUN
+            expression.remove(0);
+        }
 
         // Inicia a recorrer después de los parámetros y agrega todos los tokens restantes al cuerpo de la función
         StringBuilder body = new StringBuilder();
         for (int j = count + 1; j < expression.size(); j++) {
-            body .append(expression.get(j).getValue() + " ");
+            body.append(expression.get(j).getValue() + " ");
         }
+
+        System.out.println(body.toString());
 
         return new Function(name, parameters, body.toString());
     }
